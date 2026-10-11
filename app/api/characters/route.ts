@@ -3,7 +3,13 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petAssets, petPhotos } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
-import { STICKER_STYLES, buildStickerPrompt, refreshCharacter, serializeCharacter } from "@/lib/characters";
+import {
+  CHARACTER_STYLES,
+  buildCharacterPrompt,
+  buildStickerSheetPrompt,
+  refreshCharacter,
+  serializeCharacter,
+} from "@/lib/characters";
 import { MeshyError, arrayBufferToDataUrl, createImageTask, meshyConfigured } from "@/lib/meshy";
 
 export const runtime = "edge";
@@ -35,11 +41,16 @@ export async function POST(request: Request) {
     style?: string;
     colors?: unknown;
     photoId?: string;
+    kind?: string;
+    sourceCharacterId?: string;
+    theme?: string;
   };
+  const kind = body.kind === "sticker_sheet" ? "sticker_sheet" : "character";
+  const theme = String(body.theme ?? "").trim().slice(0, 120);
   const petKey = String(body.petKey ?? "").trim().slice(0, 80);
   const petName = String(body.petName ?? "").trim().slice(0, 40);
   const userPrompt = String(body.prompt ?? "").trim().slice(0, 600);
-  const style = body.style && body.style in STICKER_STYLES ? body.style : "storybook";
+  const style = body.style && body.style in CHARACTER_STYLES ? body.style : "storybook";
   const colors = (Array.isArray(body.colors) ? body.colors : [])
     .filter((color): color is string => typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color))
     .slice(0, 5);
@@ -52,15 +63,27 @@ export async function POST(request: Request) {
     .filter((row) => row.status === "running");
   if (stillRunning.length) {
     return Response.json(
-      { error: "A sticker is still being drawn. Try again when it finishes.", characterId: stillRunning[0].id },
+      { error: "Meshy is still drawing. Try again when it finishes.", characterId: stillRunning[0].id },
       { status: 429 },
     );
   }
 
-  // The pet photo is only shared with Meshy when the owner explicitly sends its id.
   const referenceImageUrls: string[] = [];
   let photoId: string | null = null;
-  if (body.photoId) {
+  let sourceAssetId: string | null = null;
+  if (kind === "sticker_sheet") {
+    // A sheet is drawn from one of the pet's finished characters, not from the photo.
+    const [source] = await db.select().from(petAssets).where(and(
+      eq(petAssets.id, String(body.sourceCharacterId ?? "")),
+      eq(petAssets.userId, user.userId),
+      eq(petAssets.status, "succeeded"),
+    )).limit(1);
+    const object = source?.r2Key ? await env.BUCKET?.get(source.r2Key) : null;
+    if (!source || !object) return Response.json({ error: "Choose a finished character first." }, { status: 400 });
+    referenceImageUrls.push(arrayBufferToDataUrl(await object.arrayBuffer(), source.contentType ?? "image/png"));
+    sourceAssetId = source.id;
+  } else if (body.photoId) {
+    // The pet photo is only shared with Meshy when the owner explicitly sends its id.
     const [photo] = await db.select().from(petPhotos)
       .where(and(eq(petPhotos.id, body.photoId), eq(petPhotos.userId, user.userId)))
       .limit(1);
@@ -71,31 +94,29 @@ export async function POST(request: Request) {
   }
 
   try {
+    const petType = String(body.petType ?? "");
     const task = await createImageTask({
-      prompt: buildStickerPrompt({
-        petName,
-        petType: String(body.petType ?? ""),
-        style,
-        prompt: userPrompt,
-        colors,
-        fromPhoto: Boolean(photoId),
-      }),
+      prompt: kind === "sticker_sheet"
+        ? buildStickerSheetPrompt({ petName, petType, theme, prompt: userPrompt })
+        : buildCharacterPrompt({ petName, petType, style, prompt: userPrompt, colors, fromPhoto: Boolean(photoId) }),
       referenceImageUrls,
       removeBackground: true,
+      model: kind === "sticker_sheet" ? "gpt-image-2-5-flare" : "nano-banana-2",
     });
     const existing = await db.select({ id: petAssets.id }).from(petAssets)
-      .where(and(eq(petAssets.userId, user.userId), eq(petAssets.petKey, petKey)));
+      .where(and(eq(petAssets.userId, user.userId), eq(petAssets.petKey, petKey), eq(petAssets.kind, kind)));
     const now = new Date().toISOString();
     const row = {
       id: crypto.randomUUID(),
       userId: user.userId,
       petKey,
       petName,
-      kind: "sticker",
-      name: `Sticker ${existing.length + 1}`,
-      prompt: userPrompt,
+      kind,
+      name: `${kind === "sticker_sheet" ? "Sticker sheet" : "Character"} ${existing.length + 1}`,
+      prompt: kind === "sticker_sheet" ? theme : userPrompt,
       style,
       photoId,
+      sourceAssetId,
       provider: "meshy",
       providerTaskType: task.type,
       providerTaskId: task.taskId,
@@ -113,7 +134,7 @@ export async function POST(request: Request) {
     const status = error instanceof MeshyError ? (error.status === 401 ? 502 : error.status) : 500;
     const message = error instanceof MeshyError && error.status === 401
       ? "Meshy rejected the server's API key. Check MESHY_API_KEY."
-      : error instanceof Error ? error.message : "Meshy could not start this sticker.";
+      : error instanceof Error ? error.message : "Meshy could not start this.";
     return Response.json({ error: message }, { status });
   }
 }

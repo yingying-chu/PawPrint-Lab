@@ -125,7 +125,7 @@
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
-          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · for printed goods</small></button><button type="button" data-design-mode="sticker" aria-pressed="false">Character sticker<small>by Meshy · for sticker packs</small></button></div>
+          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · printed goods</small></button><button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button><button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button></div>
           <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
           <p class="control-label">Choose a design direction</p>
           <div class="style-picker" role="radiogroup">
@@ -137,7 +137,8 @@
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
           <p class="palette-hint">Tap colors to include them in the design.</p>
           <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
-          <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this sticker as a reference">×</button></div>
+          <div class="sheet-options" id="sheetOptions" hidden><span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div><label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label></div>
+          <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this character as a reference">×</button></div>
           <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
           <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>
           <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
@@ -148,7 +149,7 @@
     </section>
 
     <section class="sticker-pack section workspace-view" id="stickerPack" data-route="designs" hidden>
-      <div class="sticker-pack-head"><div><p class="eyebrow">Sticker pack</p><h3><span class="name-copy">WHISPURR</span>’s characters</h3></div><p>Each sticker is a transparent PNG drawn by Meshy. Download them for printing, or use one to guide an Arcade pattern.</p></div>
+      <div class="sticker-pack-head"><div><p class="eyebrow">Characters &amp; sticker sheets</p><h3><span class="pet-name-copy">Whispurr</span>’s gallery</h3></div><p>Characters are their own art, drawn by Meshy. Turn any character into a sticker sheet of nine, or use it to guide an Arcade pattern. Everything downloads as a transparent PNG.</p></div>
       <div class="sticker-grid" id="stickerGrid"></div>
     </section>
 

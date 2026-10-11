@@ -56,8 +56,9 @@ export type MeshyModelTask = MeshyTask & {
 export type ImageTaskType = "text-to-image" | "image-to-image";
 
 // nano-banana-2 balances quality and cost (6 credits per image); nano-banana-pro
-// (9 credits) follows detailed edits such as removing a leash more reliably.
-export type ImageModel = "nano-banana-2" | "nano-banana-pro";
+// (9 credits) follows detailed edits such as removing a leash more reliably;
+// gpt-image-2-5-flare (12 credits from a reference) handles multi-sticker layouts.
+export type ImageModel = "nano-banana-2" | "nano-banana-pro" | "gpt-image-2-5-flare";
 
 /** Generates one image, guided by reference photos when given. Returns the task to poll. */
 export async function createImageTask(input: {

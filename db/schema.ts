@@ -77,11 +77,15 @@ export const petAssets = sqliteTable("pet_assets", {
   userId: text("user_id").notNull(),
   petKey: text("pet_key").notNull(),
   petName: text("pet_name").notNull(),
+  // "character" (the pet's own illustrated character) or "sticker_sheet" (made from a character).
+  // The column default predates characters; code always sets kind explicitly.
   kind: text("kind").notNull().default("sticker"),
   name: text("name").notNull(),
   prompt: text("prompt").notNull(),
   style: text("style").notNull(),
   photoId: text("photo_id"),
+  // For a sticker sheet, the character it was drawn from.
+  sourceAssetId: text("source_asset_id"),
   provider: text("provider").notNull().default("meshy"),
   providerTaskType: text("provider_task_type").notNull(),
   providerTaskId: text("provider_task_id").notNull(),

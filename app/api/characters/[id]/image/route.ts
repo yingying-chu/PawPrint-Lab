@@ -6,7 +6,7 @@ import { getApiUser, unauthorized } from "@/lib/api-auth";
 
 export const runtime = "edge";
 
-/** Streams the owner's private sticker image from R2. `?download=1` saves it as a file. */
+/** Streams the owner's private character or sticker-sheet image from R2. `?download=1` saves it as a file. */
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getApiUser();
   if (!user) return unauthorized();

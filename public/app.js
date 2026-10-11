@@ -701,7 +701,7 @@ async function saveLocalPreviewDesign(btn, reason) {
 $("#generatePattern").addEventListener("click", async (e) => {
   const pet = activePet(),
     btn = e.currentTarget;
-  if (state.designMode === "sticker") return generateSticker(btn);
+  if (state.designMode !== "pattern") return generateMeshyImage(btn);
   if (!pet.twinReady) {
     toast("Create the pet twin first so the design keeps their likeness");
     location.hash = "#/studio";
@@ -868,7 +868,8 @@ function setArcadeStatus(html, tone = "") {
 }
 function updateReferenceOption() {
   const photo = storedPhoto(activePet());
-  $("#arcadeReference").hidden = !photo;
+  // A sticker sheet is drawn from a character, so the photo opt-in doesn't apply.
+  $("#arcadeReference").hidden = !photo || state.designMode === "sheet";
   if (!photo) $("#usePhotoReference").checked = false;
 }
 function showArcadeDesign(design) {
@@ -1070,13 +1071,24 @@ async function openArcadeCheckout(productIds, btn) {
   }
 }
 
-// ---- Meshy: character stickers (2D) and the 3D twin ----
+// ---- Meshy: characters and sticker sheets (2D), and the 3D twin ----
+// A character is the pet's own illustrated art; sticker sheets (and patterns) are made from it.
 state.designMode = "pattern";
 state.patternCharacterId = null;
+state.sheetSourceId = null;
+const MESHY_MODES = ["character", "sheet"];
 const generateLabel = () =>
-  state.designMode === "sticker"
-    ? "Generate sticker with Meshy <span>✦</span>"
-    : "Generate with Arcade <span>✦</span>";
+  `${{ character: "Draw character with Meshy", sheet: "Make sticker sheet with Meshy" }[state.designMode] || "Generate with Arcade"} <span>✦</span>`;
+const petCharacters = (pet) => (pet.characters || []).filter((c) => c.kind !== "sticker_sheet");
+const readyCharacters = (pet) => petCharacters(pet).filter((c) => c.status === "succeeded");
+const stickerSheets = (pet) => (pet.characters || []).filter((c) => c.kind === "sticker_sheet");
+const DESIGN_NOTES = {
+  pattern:
+    "Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.",
+  character:
+    "Meshy draws the character as a transparent PNG in about a minute. It joins the gallery below, ready to become stickers or a pattern.",
+  sheet: "Meshy draws nine hand-drawn stickers of the chosen character on one transparent sheet, in about a minute.",
+};
 function setDesignMode(mode) {
   state.designMode = mode;
   $$("[data-design-mode]").forEach((btn) => {
@@ -1084,21 +1096,44 @@ function setDesignMode(mode) {
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-pressed", String(active));
   });
-  const sticker = mode === "sticker";
+  const meshy = MESHY_MODES.includes(mode);
   $("#generatePattern").innerHTML = generateLabel();
-  $$(".ref-provider").forEach((el) => (el.textContent = sticker ? "Meshy" : "Arcade"));
-  $$(".ref-output").forEach((el) => (el.textContent = sticker ? "sticker" : "pattern"));
-  $("#designNote").textContent = sticker
-    ? "Meshy draws a transparent sticker in about a minute. Stickers collect in the pack below."
-    : "Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.";
-  $("#applyBrand").hidden = sticker;
-  $("#portraitCanvas").classList.toggle("sticker-mode", sticker);
+  $$(".ref-provider").forEach((el) => (el.textContent = meshy ? "Meshy" : "Arcade"));
+  $$(".ref-output").forEach((el) => (el.textContent = mode === "character" ? "character" : "pattern"));
+  $("#designNote").textContent = DESIGN_NOTES[mode];
+  $("#applyBrand").hidden = meshy;
+  $("#sheetOptions").hidden = mode !== "sheet";
+  $("#portraitCanvas").classList.toggle("sticker-mode", meshy);
+  updateReferenceOption();
+  renderSheetSources();
   renderPatternReference();
   setArcadeStatus("");
+  const pet = activePet();
+  const latest = (mode === "sheet" ? stickerSheets(pet) : readyCharacters(pet)).find((c) => c.status === "succeeded");
+  showSticker(meshy ? latest : null);
 }
 $$("[data-design-mode]").forEach((btn) =>
   btn.addEventListener("click", () => setDesignMode(btn.dataset.designMode)),
 );
+function renderSheetSources() {
+  const wrap = $("#sheetSources"),
+    ready = readyCharacters(activePet());
+  if (!ready.some((c) => c.id === state.sheetSourceId)) state.sheetSourceId = ready[0]?.id || null;
+  wrap.innerHTML = ready.length
+    ? ready
+        .map(
+          (c) =>
+            `<button type="button" class="${c.id === state.sheetSourceId ? "active" : ""}" data-sheet-source="${escapeHtml(c.id)}" aria-pressed="${c.id === state.sheetSourceId}"><img src="${escapeHtml(c.imageUrl)}" alt="">${escapeHtml(c.name)}</button>`,
+        )
+        .join("")
+    : '<span class="empty-design">Draw a character first — sticker sheets are made from one.</span>';
+  $$("[data-sheet-source]", wrap).forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.sheetSourceId = btn.dataset.sheetSource;
+      renderSheetSources();
+    }),
+  );
+}
 function renderPatternReference() {
   const chip = $("#patternReference"),
     character = (activePet().characters || []).find((c) => c.id === state.patternCharacterId);
@@ -1113,66 +1148,87 @@ $("#patternReference button").addEventListener("click", () => {
   state.patternCharacterId = null;
   renderPatternReference();
 });
-function showSticker(character) {
+function showSticker(asset) {
   const img = $("#stickerPreview");
-  img.hidden = !character?.imageUrl;
-  if (character?.imageUrl) {
-    img.src = character.imageUrl;
-    img.alt = `${character.name}: sticker of ${petName(activePet())}`;
+  img.hidden = !asset?.imageUrl;
+  if (asset?.imageUrl) {
+    img.src = asset.imageUrl;
+    img.alt = `${asset.name}: ${asset.kind === "sticker_sheet" ? "sticker sheet" : "character"} of ${petName(activePet())}`;
   }
-  $("#portraitCanvas").classList.toggle("has-sticker", Boolean(character?.imageUrl));
+  $("#portraitCanvas").classList.toggle("has-sticker", Boolean(asset?.imageUrl));
+}
+function galleryCard(asset) {
+  const sheet = asset.kind === "sticker_sheet";
+  const cls = `sticker-card${sheet ? " sheet" : ""}`;
+  if (asset.status === "running")
+    return `<figure class="${cls} pending"><div class="sticker-art"><span class="arcade-spinner"></span></div><figcaption><b>${escapeHtml(asset.name)}</b><small>Meshy is drawing…</small></figcaption></figure>`;
+  if (asset.status === "failed")
+    return `<figure class="${cls} failed"><div class="sticker-art">!</div><figcaption><b>${escapeHtml(asset.name)}</b><small>${escapeHtml(asset.error || "Couldn't be drawn")}</small></figcaption></figure>`;
+  const source = sheet && (activePet().characters || []).find((c) => c.id === asset.sourceAssetId);
+  const note = sheet
+    ? `9 stickers${source ? ` · from ${source.name}` : ""}${asset.prompt ? ` · ${asset.prompt}` : ""}`
+    : "Their own character";
+  const actions = sheet
+    ? `<a href="${escapeHtml(asset.imageUrl)}?download=1">Download sheet</a>`
+    : `<a href="${escapeHtml(asset.imageUrl)}?download=1">Download</a><button type="button" data-make-sheet="${escapeHtml(asset.id)}">Make stickers</button><button type="button" data-use-character="${escapeHtml(asset.id)}">Use in a pattern</button>`;
+  return `<figure class="${cls}"><div class="sticker-art"><img src="${escapeHtml(asset.imageUrl)}" alt="${escapeHtml(asset.name)}"></div><figcaption><b>${escapeHtml(asset.name)}</b><small>${escapeHtml(note)}</small><span>${actions}</span></figcaption></figure>`;
 }
 function renderStickerPack() {
-  const characters = activePet().characters || [];
-  $("#stickerPack").classList.toggle("empty", !characters.length);
-  $("#stickerGrid").innerHTML = characters
-    .map((c) => {
-      if (c.status === "running")
-        return `<figure class="sticker-card pending"><div class="sticker-art"><span class="arcade-spinner"></span></div><figcaption><b>${escapeHtml(c.name)}</b><small>Meshy is drawing…</small></figcaption></figure>`;
-      if (c.status === "failed")
-        return `<figure class="sticker-card failed"><div class="sticker-art">!</div><figcaption><b>${escapeHtml(c.name)}</b><small>${escapeHtml(c.error || "Couldn't be drawn")}</small></figcaption></figure>`;
-      return `<figure class="sticker-card"><div class="sticker-art"><img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.name)}"></div><figcaption><b>${escapeHtml(c.name)}</b><span><a href="${escapeHtml(c.imageUrl)}?download=1">Download PNG</a><button type="button" data-use-sticker="${escapeHtml(c.id)}">Use in a pattern</button></span></figcaption></figure>`;
-    })
-    .join("");
-  $$("[data-use-sticker]").forEach((btn) =>
+  const pet = activePet(),
+    items = [...petCharacters(pet), ...stickerSheets(pet)];
+  $("#stickerPack").classList.toggle("empty", !items.length);
+  $("#stickerGrid").innerHTML = items.map(galleryCard).join("");
+  $$("[data-make-sheet]").forEach((btn) =>
     btn.addEventListener("click", () => {
-      state.patternCharacterId = btn.dataset.useSticker;
-      setDesignMode("pattern");
+      state.sheetSourceId = btn.dataset.makeSheet;
+      setDesignMode("sheet");
       $("#portraitCanvas").scrollIntoView({ behavior: "smooth", block: "start" });
-      toast("The next Arcade pattern will be guided by this sticker");
+      toast("Pick a remix theme, then make the sticker sheet");
     }),
   );
+  $$("[data-use-character]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.patternCharacterId = btn.dataset.useCharacter;
+      setDesignMode("pattern");
+      $("#portraitCanvas").scrollIntoView({ behavior: "smooth", block: "start" });
+      toast("The next Arcade pattern will be guided by this character");
+    }),
+  );
+  if (MESHY_MODES.includes(state.designMode)) renderSheetSources();
 }
-async function generateSticker(btn) {
+async function generateMeshyImage(btn) {
   const pet = activePet(),
-    photo = storedPhoto(pet),
-    usePhoto = Boolean(photo && $("#usePhotoReference").checked);
+    sheet = state.designMode === "sheet";
+  const body = {
+    petKey: pet.id,
+    petName: petName(pet),
+    petType: pet.type,
+    style: $(".style.active")?.dataset.style || "storybook",
+    colors: selectedColors(),
+  };
+  if (sheet) {
+    const source = readyCharacters(pet).find((c) => c.id === state.sheetSourceId);
+    if (!source) return setArcadeStatus("Draw a character first, then make a sticker sheet from it.", "warn");
+    Object.assign(body, { kind: "sticker_sheet", sourceCharacterId: source.id, theme: $("#sheetTheme").value.trim() });
+  } else {
+    const photo = storedPhoto(pet),
+      usePhoto = Boolean(photo && $("#usePhotoReference").checked);
+    Object.assign(body, { kind: "character", prompt: $("#patternPrompt").value.trim(), photoId: usePhoto ? photo.id : undefined });
+  }
   btn.disabled = true;
   btn.innerHTML = "Sending to Meshy… <span>✦</span>";
-  setArcadeStatus(usePhoto ? "Sharing the reference photo and starting the sticker…" : "Starting the sticker…");
+  setArcadeStatus(sheet ? "Starting the sticker sheet…" : body.photoId ? "Sharing the reference photo and starting the character…" : "Starting the character…");
   try {
-    const { character } = await api("/api/characters", {
-      method: "POST",
-      body: {
-        petKey: pet.id,
-        petName: petName(pet),
-        petType: pet.type,
-        prompt: $("#patternPrompt").value.trim(),
-        style: $(".style.active")?.dataset.style || "storybook",
-        colors: selectedColors(),
-        photoId: usePhoto ? photo.id : undefined,
-      },
-    });
+    const { character } = await api("/api/characters", { method: "POST", body });
     pet.characters = [character, ...(pet.characters || [])];
     renderStickerPack();
     await pollCharacter(pet, character.id);
   } catch (error) {
     if (error.status === 401)
-      setArcadeStatus(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to generate stickers.`, "error");
-    else if (error.code === "MESHY_NOT_CONFIGURED")
-      setArcadeStatus("Meshy isn't connected on this site yet.", "warn");
+      setArcadeStatus(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to draw with Meshy.`, "error");
+    else if (error.code === "MESHY_NOT_CONFIGURED") setArcadeStatus("Meshy isn't connected on this site yet.", "warn");
     else if (error.status === 429 && error.payload?.characterId) {
-      setArcadeStatus("A sticker is still being drawn — waiting for it.");
+      setArcadeStatus("Meshy is still drawing the last one — waiting for it.");
       await pollCharacter(pet, error.payload.characterId);
     } else setArcadeStatus(escapeHtml(error.message), "error");
   } finally {
@@ -1187,8 +1243,8 @@ async function pollCharacter(pet, characterId) {
   try {
     while (Date.now() - started < 5 * 60 * 1000) {
       const seconds = Math.round((Date.now() - started) / 1000);
-      if (pet === activePet() && state.designMode === "sticker")
-        setArcadeStatus(`<span class="arcade-spinner"></span>Meshy is drawing the sticker · ${seconds}s`);
+      if (pet === activePet() && MESHY_MODES.includes(state.designMode))
+        setArcadeStatus(`<span class="arcade-spinner"></span>Meshy is drawing · ${seconds}s`);
       await sleep(4000);
       let character;
       try {
@@ -1203,10 +1259,10 @@ async function pollCharacter(pet, characterId) {
         renderStickerPack();
         if (state.route === "home") renderCubby();
         if (character.status === "succeeded") {
-          showSticker(character);
-          setArcadeStatus(`${escapeHtml(character.name)} is ready in the sticker pack below.`, "ok");
+          if (MESHY_MODES.includes(state.designMode)) showSticker(character);
+          setArcadeStatus(`${escapeHtml(character.name)} is ready in the gallery below.`, "ok");
           toast(`${character.name} is ready`);
-        } else setArcadeStatus(escapeHtml(character.error || "Meshy couldn't draw this sticker."), "error");
+        } else setArcadeStatus(escapeHtml(character.error || "Meshy couldn't draw this."), "error");
       }
       return;
     }
@@ -1419,17 +1475,18 @@ async function renderCubby() {
     note.innerHTML = `<a href="#/designs">Generate a pattern</a> to fill these shelves with ${escapeHtml(petName(pet))}'s look.`;
   else note.innerHTML = `Shelved in <b>${escapeHtml(design.name)}</b>. Make any piece, then order everything that's ready in one checkout.`;
 
-  const stickers = (pet.characters || []).filter((c) => c.status === "succeeded").slice(0, 3);
+  // Printable sticker sheets first, then the characters they come from.
+  const keepsakes = [...stickerSheets(pet), ...petCharacters(pet)].filter((c) => c.status === "succeeded").slice(0, 4);
   $("#cubbyShelves").innerHTML = SHELVES.map((shelf) => {
     const tiles = [
       ...catalog.filter((item) => item.useCase === shelf.id).map((item) => arcadeTile(item, design, products)),
       ...(shelf.id === "keepsake"
-        ? stickers.map((s) =>
+        ? keepsakes.map((s) =>
             cubbyTile({
               image: s.imageUrl,
               title: s.name,
-              note: "Transparent PNG, ready to print",
-              chip: "Sticker · Meshy",
+              note: s.kind === "sticker_sheet" ? "9 stickers, ready to print" : "Their own character art",
+              chip: s.kind === "sticker_sheet" ? "Sticker sheet · Meshy" : "Character · Meshy",
               art: "sticker-tile",
               action: `<a class="cubby-action" href="${escapeHtml(s.imageUrl)}?download=1">Download</a>`,
             }),

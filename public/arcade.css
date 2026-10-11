@@ -189,7 +189,7 @@
 
 .design-mode {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-bottom: 18px;
 }
@@ -336,8 +336,8 @@
 }
 .sticker-card figcaption span {
   display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   margin-top: 8px;
 }
 .sticker-card figcaption a,
@@ -384,5 +384,66 @@
   .sticker-pack-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* Sticker sheets: made from a character, shown wider so the nine stickers read. */
+.sticker-card.sheet {
+  grid-column: span 2;
+}
+.sheet-options {
+  margin: 16px 0 4px;
+}
+.sheet-options[hidden] {
+  display: none;
+}
+.sheet-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.sheet-sources button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 5px 10px 5px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sheet-sources button img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.sheet-sources button.active {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.sheet-theme {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.sheet-theme input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+}
+@media (max-width: 560px) {
+  .design-mode {
+    grid-template-columns: 1fr;
+  }
+  .sticker-card.sheet {
+    grid-column: auto;
   }
 }
