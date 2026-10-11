@@ -4,19 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Product details — Pawprint Atelier</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="enhancements.css">
-  <link rel="stylesheet" href="flow.css">
+  <script>
+    // Product pages now live inside the storefront app; keep old links working.
+    const slug = new URLSearchParams(location.search).get("product") || "cloud-bed";
+    location.replace("index.html#/product/" + encodeURIComponent(slug));
+  </script>
 </head>
-<body class="pdp-body">
-  <header class="nav"><a class="brand" href="index.html#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a><nav aria-label="Main navigation"><a href="index.html#/">Home</a><a href="index.html#/studio">Pets</a><a href="index.html#/designs">Designs</a><a class="active" href="index.html#/shop">Shop</a><a href="index.html#/cubby">Cubby</a></nav><a class="back-link pdp-back" href="index.html#/shop">← Collection</a></header>
-  <main class="pdp-shell">
-    <div class="pdp-visual"><span class="eyebrow">PDP preview</span><div class="pdp-placeholder"><span class="pdp-monogram">M</span><small>Your pet’s brand appears here</small></div></div>
-    <div class="pdp-copy"><p class="eyebrow">Made for <span id="pdpPet">your pet</span></p><h1 id="pdpTitle">Custom product</h1><p>This product page is ready for the next design pass. It will include fit details, materials, customization controls, on-pet visualization, maker information, and delivery estimates.</p><div class="pdp-coming"><b>Coming next</b><span>Full product configurator</span><span>On-pet preview</span><span>Maker + fulfillment details</span></div><a class="primary" href="index.html#/shop">Return to collection <span>→</span></a></div>
-  </main>
-  <script>const p=new URLSearchParams(location.search);const names={'cloud-bed':'The Cloud Bed','ribbon-scarf':'Ribbon Scarf','everyday-harness':'Everyday Harness','portrait-bowl':'Portrait Bowl','water-bottle':'Everyday Water Bottle','sticker-pack':'Pet Personality Stickers','market-tote':'Portrait Market Tote','phone-case':'Pocket Portrait Case'};document.querySelector('#pdpTitle').textContent=names[p.get('product')]||'Custom product';document.querySelector('#pdpPet').textContent=p.get('pet')||'your pet';document.querySelector('.pdp-monogram').textContent=(p.get('pet')||'M')[0].toUpperCase();if(p.get('context')==='owner')document.querySelectorAll('[href="index.html#/shop"]').forEach(a=>a.href='index.html#/shop?view=owner');</script>
-</body>
+<body><a href="index.html#/shop">Continue to the shop</a></body>
 </html>

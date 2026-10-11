@@ -3,220 +3,336 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Create a size-aware digital twin of your pet, design personalized products, and preview their little world." />
+  <meta name="description" content="Custom goods for one very particular pet: a size-aware pet twin, patterns, stickers and stitched lettering, made into real products." />
   <title>Pawprint Atelier — Made to belong</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="enhancements.css" />
-  <link rel="stylesheet" href="owner-collection.css" />
-  <link rel="stylesheet" href="upload-fix.css" />
-  <link rel="stylesheet" href="flow.css" />
-  <link rel="stylesheet" href="arcade.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="illustration.css" />
   <link rel="stylesheet" href="pet-variants.css" />
+  <link rel="stylesheet" href="arcade.css" />
   <link rel="stylesheet" href="cubby.css" />
   <link rel="stylesheet" href="lettering.css" />
   <style>body:not([data-route]) [data-route]:not([data-route="landing"]){display:none}</style>
 </head>
 <body>
-  <header class="nav">
-    <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav class="workspace-tabs" aria-label="Main workspace" role="tablist"><a id="tab-landing" role="tab" aria-selected="true" data-nav-route="landing" href="#/">Home</a><a id="tab-studio" role="tab" aria-selected="false" data-nav-route="studio" href="#/studio">Pets</a><a id="tab-designs" role="tab" aria-selected="false" data-nav-route="designs" href="#/designs">Designs</a><a id="tab-shop" role="tab" aria-selected="false" data-nav-route="shop" href="#/shop">Shop</a><a id="tab-home" role="tab" aria-selected="false" data-nav-route="home" href="#/cubby">Cubby</a></nav>
-    <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
+  <div class="announce" role="note"><span>Made to order for your pet’s measurements</span><span>Fit checked before making</span><span>Photos private by default</span></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
+      <nav class="workspace-tabs" aria-label="Main">
+        <a data-nav-route="landing" href="#/">Home</a>
+        <a data-nav-route="studio" href="#/studio">Pets</a>
+        <a data-nav-route="designs" href="#/designs">Designs</a>
+        <a data-nav-route="shop" href="#/shop">Shop</a>
+        <a data-nav-route="home" href="#/cubby">Cubby</a>
+      </nav>
+      <div class="header-actions">
+        <a class="text-button" href="#/studio">Start designing</a>
+        <button class="bag-pill" id="bagButton" aria-label="Open bag">Bag <span class="bag-count" id="bagCount">0</span></button>
+      </div>
+    </div>
   </header>
 
-  <main id="top">
-    <section class="hero" data-route="landing">
-      <div class="hero-copy">
-        <p class="eyebrow">Made for one very particular pet</p>
-        <h1>Nothing off<br>the <em>shelf.</em></h1>
-        <p class="lede">Turn a photo into a size-aware digital pet, then make the pieces that fit their body, their personality, and your home.</p>
-        <a class="primary" href="#/studio">Meet your pet twin <span>→</span></a>
-        <div class="trust-row"><span>Photo private by default</span><span>Fit checked before making</span></div>
-      </div>
-      <div class="hero-scene" aria-label="Illustration of a dog in a personalized room">
-        <div class="sun"></div><div class="window"><i></i><i></i></div>
-        <div class="shelf"><span class="vase">✿</span><span class="frame name-copy">WHISPURR</span></div>
-        <div class="dog large"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
-        <div class="bed"><span><span class="name-copy">WHISPURR</span>’S SPOT</span></div>
-        <div class="bowl name-copy">WHISPURR</div>
-        <p class="scene-note"><b>Designed together.</b><br>Made to their measurements.</p>
-      </div>
-    </section>
-
-    <section class="process-strip" aria-label="How it works" data-route="landing">
-      <div><b>01</b><span><strong>Capture</strong>Your pet + their scale</span></div>
-      <div><b>02</b><span><strong>Create</strong>Portraits and patterns</span></div>
-      <div><b>03</b><span><strong>Try on</strong>Every detail, in context</span></div>
-      <div><b>04</b><span><strong>Make</strong>With vetted partners</span></div>
-    </section>
-
-    <section class="studio section workspace-view" id="studio" data-route="studio">
-      <div class="section-head"><div><p class="eyebrow">The fitting room</p><h2>Start with who<br>we’re making for.</h2></div><p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p></div>
-      <div class="pet-setup-panel">
-        <div class="pet-basics-heading"><span>1</span><div><b>Pet basics</b><small>Name and type come first. You can switch profiles below at any time.</small></div></div>
-        <div class="form-row pet-basics-form">
-          <label>Pet’s name<input id="petName" value="Whispurr" maxlength="12" /></label>
-          <label>Pet type<select id="petType"><option>Dog</option><option selected>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+  <main>
+    <!-- 01 Home -->
+    <div data-route="landing">
+      <section class="hero">
+        <span class="hero-dot sun"></span><span class="hero-dot pink"></span><span class="hero-dot sky"></span>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="sticker-label">Custom goods for one very particular pet</span>
+            <h1>Nothing off<br>the <span class="c1">sh</span><span class="c2">el</span><span class="c3">f.</span></h1>
+            <p class="hero-lede">Turn a photo into a size-aware digital pet, then make the pieces that fit their body, their personality, and your home.</p>
+            <div class="hero-actions">
+              <a class="btn btn-cta" href="#/studio">Design for your pet <span>→</span></a>
+              <a class="btn btn-outline" href="#/shop">Shop the collection</a>
+            </div>
+            <div class="check-row"><span>Photo private by default</span><span>Fit checked before making</span><span>Pieces from $14</span></div>
+          </div>
+          <div class="hero-art">
+            <div class="hero-frame" id="heroFrame" role="img" aria-label="Illustration of a cat in a cosy room with a bed and bowl made for her">
+              <div class="hero-stage">
+                <div class="floor"></div><div class="sun"></div><div class="window"></div>
+                <div class="shelf"><span class="vase">✿</span><span class="frame name-copy">WHISPURR</span></div>
+                <div class="bed"><span><span class="name-copy">WHISPURR</span>’S SPOT</span></div>
+                <div class="bowl name-copy">WHISPURR</div>
+                <div class="dog"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
+              </div>
+            </div>
+            <div class="hero-tiles" id="heroTiles"></div>
+          </div>
         </div>
-        <div class="pet-profiles-row"><span class="pet-profiles-label">Your pet profiles</span><div class="pet-switcher" id="petSwitcher">
-          <button class="pet-chip active" data-pet-id="whispurr"><span class="pet-avatar">W</span><span><b>Whispurr</b><small>Active profile</small></span></button>
-          <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
-        </div></div>
+      </section>
+
+      <section class="category-strip"><div class="wrap" id="categoryStrip"></div></section>
+
+      <section class="wrap home-section" style="padding-top:88px">
+        <div class="section-head-center"><p class="eyebrow grape">How it works</p><h2 class="section-title">Four steps to their stuff.</h2></div>
+        <div class="steps-grid">
+          <div class="step-card" style="--tile:var(--peach)"><span class="step-num">01</span><span><strong>Capture</strong>Your pet + their scale</span></div>
+          <div class="step-card" style="--tile:var(--butter-tint)"><span class="step-num">02</span><span><strong>Create</strong>Portraits and patterns</span></div>
+          <div class="step-card" style="--tile:var(--mint-tint)"><span class="step-num">03</span><span><strong>Try on</strong>Every detail, in context</span></div>
+          <div class="step-card" style="--tile:var(--lavender)"><span class="step-num">04</span><span><strong>Make</strong>With vetted partners</span></div>
+        </div>
+      </section>
+
+      <section class="wrap home-section">
+        <div class="row-head">
+          <div><p class="eyebrow tangerine">Most loved</p><h2 class="section-title">Start with a favorite.</h2></div>
+          <a class="link-underline" href="#/shop">Shop all pieces →</a>
+        </div>
+        <div class="product-grid featured" id="featuredGrid"></div>
+      </section>
+
+      <section class="wrap home-section split-panels">
+        <a class="split-panel" style="--tile:var(--pink-tint)" href="#/shop?view=pet"><p>For your pet</p><h3>Beds, bandanas, bowls, and harnesses that fit.</h3><span class="spacer"></span><span class="pill-cta">Shop for your pet →</span></a>
+        <a class="split-panel" style="--tile:var(--sky-tint)" href="#/shop?view=owner"><p>For their favorite person</p><h3>Totes, bottles, cases, and stickers in their pattern.</h3><span class="spacer"></span><span class="pill-cta">Shop for you →</span></a>
+      </section>
+
+      <section class="wrap home-section" style="padding-top:60px;padding-bottom:90px">
+        <div class="maker-band">
+          <div><p class="eyebrow sun">From screen to doorstep</p><h2 class="section-title">Designed by you.<br><span>Made by people we trust.</span></h2></div>
+          <div class="maker-steps">
+            <div><b>01</b><span><strong>Fit review</strong>Measurements checked before production</span></div>
+            <div><b>02</b><span><strong>Maker match</strong>Sent to a vetted specialist</span></div>
+            <div><b>03</b><span><strong>One checkout</strong>Track every custom piece together</span></div>
+            <a class="btn btn-sun" href="#/studio" style="align-self:flex-start;margin-top:8px">Start with a photo <span>→</span></a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 02 Pets -->
+    <section class="wrap page" id="studio" data-route="studio">
+      <div class="page-head">
+        <div><p class="eyebrow">The fitting room</p><h1 class="page-title">Start with who<br>we’re making for.</h1></div>
+        <p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p>
       </div>
-      <div class="flow-progress" aria-label="Pet creation progress"><span class="active"><b>1</b>Pet profile</span><i></i><span><b>2</b>Twin review</span><i></i><span><b>3</b>Choose what’s next</span></div>
-      <div class="studio-grid">
-        <div class="capture-card">
-          <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
-          <div class="demo-photo-option" id="demoPhotoOption"><img src="assets/whispurr-demo.jpg" alt="Whispurr, a fluffy cream Persian cat in a harness, sitting on a bench"><div><small>Demo photo</small><b>Try it with Whispurr</b><span>Full body and face visible · no tape measurements yet</span></div><button type="button" id="useDemoPhoto">Use demo photo</button></div>
-          <div class="photo-chat" id="photoChat">
-            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! <b>One clear photo is enough</b> to start <b class="chat-pet-name">Whispurr</b>’s profile. A standing full-body photo works best. Add other angles only if you’d like more detail.</p></div>
-            <div class="shot-guide"><span><i>1</i>Best first photo</span><span class="optional"><i>＋</i>Face · optional</span><span class="optional"><i>＋</i>Side · optional</span><span class="optional"><i>＋</i>Detail · optional</span></div>
+      <div class="flow-progress" aria-label="Pet creation progress"><span class="current"><b>1</b>Pet profile</span><span><b>2</b>Twin review</span><span><b>3</b>Choose what’s next</span></div>
+      <div class="two-col">
+        <div class="panel">
+          <div class="pet-basics">
+            <label class="field">Pet’s name<input id="petName" value="Whispurr" maxlength="12" /></label>
+            <label class="field">Pet type<select id="petType"><option>Dog</option><option selected>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+          </div>
+          <div class="pet-switcher" id="petSwitcher"><button class="add-pet-chip" id="addPet" type="button">＋ Add another pet</button></div>
+          <div class="panel-divider"></div>
+          <div class="photo-block">
+            <div class="block-head"><b>Add a photo</b><small>Standing, full body works best</small></div>
             <div class="photo-tray" id="photoTray"></div>
-            <div class="chat-status" id="chatStatus">No photos attached yet</div>
-            <div class="storage-status" id="storageStatus" aria-live="polite"><span></span>Private storage activates when you upload. Photos delete automatically after 30 days.</div>
+            <div class="photo-options" id="photoOptions">
+              <button type="button" class="upload-card" id="attachPhotos"><span>＋</span><b>Upload from device</b><small>JPG or PNG · one is enough</small></button>
+              <button type="button" class="demo-card" id="useDemoPhoto"><img src="assets/whispurr-demo.jpg" alt="Demo photo of Whispurr"><span><small>Demo photo</small><b>Try it with Whispurr</b></span></button>
+            </div>
+            <button type="button" class="add-angle" id="addAngle" hidden>＋ Add another angle · optional</button>
+            <input type="file" id="petPhotos" accept="image/*" multiple hidden />
+            <p class="storage-status" id="storageStatus" aria-live="polite">Private storage activates when you upload. Photos delete automatically after 30 days.</p>
           </div>
-          <div class="capture-assessment" id="captureAssessment" aria-live="polite"><div class="assessment-head"><b>Capture quality</b><span id="captureGrade">Waiting for a photo</span></div><ul id="qualityChecks"><li>Upload a photo to run the first checks.</li></ul></div>
-          <div class="message-composer">
-            <input type="file" id="petPhotos" accept="image/*" multiple />
-            <button class="attach-button" id="attachPhotos" aria-label="Upload pet photos from this device"><span>＋</span> Upload from device</button>
-            <input id="photoMessage" placeholder="Add a note about their features…" aria-label="Message about your pet" />
-            <button class="send-button" id="sendPhotoMessage">Send</button>
+          <div class="accordion-card">
+            <button type="button" id="measureToggle" aria-expanded="false" aria-controls="measurements"><span>Add measurements for a more precise fit <small>· optional</small></span><span id="measureIcon">＋</span></button>
+            <div class="measurements" id="measurements" hidden>
+              <div class="measure-head"><small>Back, chest, and neck are enough for an initial fit profile.</small><div class="unit-toggle" role="group" aria-label="Measurement unit"><button class="active" type="button" data-unit="cm">cm</button><button type="button" data-unit="in">in</button></div></div>
+              <div class="measure-grid">
+                <label>Back length<span><input class="measurement-input" data-key="back" data-cm="" type="number" placeholder="48" min="2" max="200" step="0.1"><i class="measurement-unit">cm</i></span></label>
+                <label>Chest<span><input class="measurement-input" data-key="chest" data-cm="" type="number" placeholder="62" min="2" max="250" step="0.1"><i class="measurement-unit">cm</i></span></label>
+                <label>Neck<span><input class="measurement-input" data-key="neck" data-cm="" type="number" placeholder="38" min="2" max="150" step="0.1"><i class="measurement-unit">cm</i></span></label>
+              </div>
+              <label class="measure-confirm"><input id="confirmMeasurements" type="checkbox"> I measured these values with a tape and confirm they are accurate.</label>
+            </div>
           </div>
-          <button class="text-button" id="measureToggle" aria-expanded="false">＋ Add measurements for a more precise fit</button>
-          <div class="measurements" id="measurements">
-            <div class="measurement-head"><div><b>Optional measurements</b><small>Back, chest, and neck are enough for an initial fit profile.</small></div><div class="unit-toggle" role="group" aria-label="Measurement unit"><button class="active" type="button" data-unit="cm">cm</button><button type="button" data-unit="in">in</button></div></div>
-            <label>Back length <span><input class="measurement-input" data-key="back" data-cm="" type="number" placeholder="48" min="2" max="200" step="0.1"> <i class="measurement-unit">cm</i></span></label>
-            <label>Chest <span><input class="measurement-input" data-key="chest" data-cm="" type="number" placeholder="62" min="2" max="250" step="0.1"> <i class="measurement-unit">cm</i></span></label>
-            <label>Neck <span><input class="measurement-input" data-key="neck" data-cm="" type="number" placeholder="38" min="2" max="150" step="0.1"> <i class="measurement-unit">cm</i></span></label>
-            <label class="measurement-confirm"><input id="confirmMeasurements" type="checkbox"> I measured these values with a tape and confirm they are accurate.</label>
-          </div>
-          <div class="profile-readiness"><div><span>Visual twin</span><b id="visualReadiness">Needs a photo</b></div><div><span>Fit profile</span><b id="fitReadiness">Photo estimate only</b></div></div>
-          <button class="primary full" id="createTwin">Create prototype twin <span>→</span></button>
-          <p class="provider-note">Creating the 3D twin shares your first uploaded photo with Meshy to build the model.</p>
+          <button class="btn btn-ink btn-block" id="createTwin" disabled>Create prototype twin <span>→</span></button>
+          <p class="small-note" style="margin-top:-10px">Creating the 3D twin shares your first uploaded photo with Meshy to build the model.</p>
           <p class="inline-error" id="twinError" role="alert"></p>
-          <div class="pipeline-state" id="pipelineState" hidden><span class="pipeline-dot"></span><div><b>Visual-twin job prepared</b><small id="pipelineDetail">Demo mode · connect a private 3D provider key to generate a GLB model.</small></div></div>
         </div>
-        <div class="twin-card">
-          <div class="twin-top"><span>Digital twin preview</span><span class="status-dot pending" id="twinStatus">Waiting for photos</span></div>
-          <div class="twin-view">
-            <div class="grid-floor"></div>
-            <div class="measure-line vertical"><span>53 cm</span></div><div class="measure-line horizontal"><span>71 cm</span></div>
-            <div class="dog model" id="petModel"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
-            <div class="twin-model" id="twinModel" hidden></div>
-            <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
+        <div class="sticky-col">
+          <div class="twin-card">
+            <div class="twin-view">
+              <div class="twin-badges"><span>Digital twin preview</span><span class="status-pill" id="twinStatus">Waiting for photos</span></div>
+              <div class="twin-empty" id="twinEmpty">3D twin appears here</div>
+              <img class="twin-photo" id="twinPhoto" alt="" hidden>
+              <div class="twin-model" id="twinModel" hidden></div>
+              <div class="twin-spinner" id="twinSpinner" hidden><span class="spinner"></span></div>
+              <span class="twin-dims" id="twinDims">Photo estimate</span>
+            </div>
           </div>
-          <div class="twin-bottom"><div><small>FIT PROFILE</small><strong id="fitProfile">Medium · long body</strong></div><button id="adjustFit">Adjust fit</button></div>
-          <div class="twin-next-actions" id="twinNextActions" hidden><div><small>TWIN READY</small><strong>What would you like to do next?</strong></div><a href="#/designs">Create a design</a><a href="#/shop">Shop products</a></div>
+          <div class="fit-card"><span><small>FIT PROFILE</small><strong id="fitProfile">Photo estimate</strong></span><button type="button" id="adjustFit">Adjust fit</button></div>
+          <p class="twin-detail" id="pipelineState" hidden><span id="pipelineDetail"></span></p>
+          <div class="ready-panel" id="twinNextActions" hidden>
+            <span><small>TWIN READY</small><strong>What would you like to do next?</strong></span>
+            <div><a class="go-design" href="#/designs">Create a design</a><a class="go-shop" href="#/shop">Shop products</a></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="portrait section workspace-view" id="designs" data-route="designs">
-      <div class="section-head"><div><p class="eyebrow">Pet design studio</p><h2>Create a look.<br>Save every version.</h2></div><p>Turn their likeness into portrait marks, name treatments, and repeat patterns. Start new directions, save favorites, then apply one across products.</p></div>
-      <div class="design-library"><div><span class="control-label">Saved designs</span><div class="saved-designs" id="savedDesigns"><span class="empty-design">No saved designs yet</span></div></div><button class="secondary" id="newDesign">＋ New design</button></div>
-      <div class="portrait-workbench">
+    <!-- 03 Designs -->
+    <section class="wrap page" id="designs" data-route="designs">
+      <div class="page-head">
+        <div><p class="eyebrow">Pet design studio</p><h1 class="page-title">Create a look.<br>Save every version.</h1></div>
+        <p>Turn their likeness into patterns, characters, sticker sheets, and stitched lettering. Save favorites, then apply one across products.</p>
+      </div>
+      <div class="saved-row"><b>Saved designs</b><div class="saved-designs" id="savedDesigns"><span class="empty-design">No saved designs yet</span></div><button type="button" class="dashed-pill" id="newDesign">＋ New design</button></div>
+      <div class="two-col">
         <div class="portrait-canvas" id="portraitCanvas">
-          <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
-          <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
-          <div class="portrait-name" id="portraitName">WHISPURR</div>
+          <div class="canvas-empty"><span><b id="portraitName">WHISPURR</b><small id="canvasHint">your design appears here</small></span></div>
           <img class="arcade-pattern" id="arcadePattern" alt="" hidden>
           <img class="sticker-preview" id="stickerPreview" alt="" hidden>
           <div class="lettering-stage" id="letteringStage" hidden><div class="lettering-hoop" id="letteringHoop"></div></div>
-          <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
-        <div class="portrait-controls">
-          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · printed goods</small></button><button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button><button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button><button type="button" data-design-mode="lettering" aria-pressed="false">Lettering<small>embroidery · drawn instantly</small></button></div>
-          <div class="brand-progress" data-modes="pattern"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
-          <p class="control-label" data-modes="pattern character">Choose a design direction</p>
-          <div class="style-picker" role="radiogroup" data-modes="pattern character">
-            <button class="style active" data-style="storybook"><span>〽</span>Storybook</button>
-            <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
-            <button class="style" data-style="minimal"><span>◯</span>Minimal line</button>
+        <div class="panel">
+          <div class="design-mode" role="group" aria-label="What to create">
+            <button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · for printed goods</small></button>
+            <button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button>
+            <button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button>
+            <button type="button" data-design-mode="lettering" aria-pressed="false">Lettering<small>embroidery · drawn instantly</small></button>
           </div>
-          <label class="prompt-label" data-modes="pattern character"><span id="promptLabel">Or make it yours</span><textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Whispurr, warm clay and butter yellow.</textarea></label>
-          <div class="palette" data-modes="pattern character"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <p class="palette-hint" data-modes="pattern character">Tap colors to include them in the design.</p>
-          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
-          <div class="lettering-options" id="letteringOptions" data-modes="lettering" hidden><label class="sheet-theme">Name<input id="letterText" maxlength="24"></label><label class="sheet-theme">Second line <small>optional</small><input id="letterSubline" maxlength="32" placeholder="e.g. est. 2021 · good cat · Melbourne"></label><span class="control-label">Font</span><div class="choice-row" id="letterFonts"><button type="button" class="active" data-font="rounded">Rounded</button><button type="button" data-font="hand">Handwritten</button><button type="button" data-font="script">Script</button><button type="button" data-font="typewriter">Typewriter</button></div><span class="control-label">Stitch</span><div class="choice-row" id="letterStitches"><button type="button" class="active" data-stitch="running">Running stitch</button><button type="button" data-stitch="chain">Chain stitch</button></div><span class="control-label">Thread</span><div class="palette thread-palette" id="letterThreads"><button type="button" data-thread="#c0395a" style="--swatch:#c0395a" aria-label="Rose thread" class="active"></button><button type="button" data-thread="#3b4a8f" style="--swatch:#3b4a8f" aria-label="Navy thread"></button><button type="button" data-thread="#5f7a5a" style="--swatch:#5f7a5a" aria-label="Sage thread"></button><button type="button" data-thread="#d39b2a" style="--swatch:#d39b2a" aria-label="Mustard thread"></button><button type="button" data-thread="#2a2f3a" style="--swatch:#2a2f3a" aria-label="Ink thread"></button></div><span class="control-label">Motif</span><div class="choice-row" id="letterMotifs"><button type="button" data-motif="none">None</button><button type="button" class="active" data-motif="paw">Paw</button><button type="button" data-motif="heart">Heart</button></div><button type="button" class="secondary full" id="downloadLettering">Download PNG <span>↓</span></button></div>
-          <div class="sheet-options" id="sheetOptions" hidden><span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div><label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label><label class="sheet-theme">Extra notes <small>optional</small><input id="sheetNotes" maxlength="300" placeholder="e.g. include a sleepy one and a birthday one"></label></div>
+
+          <div class="lettering-options" id="letteringOptions" data-modes="lettering" hidden>
+            <label class="field">Name<input id="letterText" maxlength="24"></label>
+            <label class="field">Second line <small style="font-weight:400;color:var(--muted-2)">optional</small><input id="letterSubline" maxlength="32" placeholder="e.g. est. 2021 · good cat · Melbourne"></label>
+            <div class="control-group"><span class="control-label">Font</span><div class="choice-row" id="letterFonts"><button type="button" class="active" data-font="rounded">Rounded</button><button type="button" data-font="hand">Handwritten</button><button type="button" data-font="script">Script</button><button type="button" data-font="typewriter">Typewriter</button></div></div>
+            <div class="control-group"><span class="control-label">Stitch</span><div class="choice-row" id="letterStitches"><button type="button" class="active" data-stitch="running">Running stitch</button><button type="button" data-stitch="chain">Chain stitch</button></div></div>
+            <div class="control-group"><span class="control-label">Thread</span><div class="palette" id="letterThreads"><button type="button" class="swatch active" data-thread="#c0395a" style="--swatch:#c0395a" aria-label="Rose thread"></button><button type="button" class="swatch" data-thread="#3b4a8f" style="--swatch:#3b4a8f" aria-label="Navy thread"></button><button type="button" class="swatch" data-thread="#5f7a5a" style="--swatch:#5f7a5a" aria-label="Sage thread"></button><button type="button" class="swatch" data-thread="#d39b2a" style="--swatch:#d39b2a" aria-label="Mustard thread"></button><button type="button" class="swatch" data-thread="#2a2f3a" style="--swatch:#2a2f3a" aria-label="Ink thread"></button></div></div>
+            <div class="control-group"><span class="control-label">Motif</span><div class="choice-row" id="letterMotifs"><button type="button" data-motif="none">None</button><button type="button" class="active" data-motif="paw">Paw</button><button type="button" data-motif="heart">Heart</button></div></div>
+            <button type="button" class="btn btn-line" id="downloadLettering">Download PNG <span>↓</span></button>
+          </div>
+
+          <div class="control-group" data-modes="pattern character">
+            <span class="control-label">Choose a design direction</span>
+            <div class="style-picker" role="radiogroup">
+              <button type="button" class="style active" data-style="storybook"><span>〽</span>Storybook</button>
+              <button type="button" class="style" data-style="cutout"><span>✂</span>Paper cut</button>
+              <button type="button" class="style" data-style="minimal"><span>◯</span>Minimal line</button>
+            </div>
+          </div>
+          <label class="field" data-modes="pattern character"><span id="promptLabel">Or make it yours</span><textarea id="patternPrompt" rows="3">Tiny wildflowers and cheerful stars around Whispurr, warm clay and butter yellow.</textarea></label>
+          <div class="control-group" data-modes="pattern character">
+            <span class="control-label">Palette <small>· tap colors to include them</small></span>
+            <div class="palette">
+              <button type="button" class="swatch selected" data-color="#ff6b3d" style="--swatch:#ff6b3d" aria-label="Terracotta" aria-pressed="true"></button>
+              <button type="button" class="swatch selected" data-color="#ffc93c" style="--swatch:#ffc93c" aria-label="Butter" aria-pressed="true"></button>
+              <button type="button" class="swatch" data-color="#2bb38a" style="--swatch:#2bb38a" aria-label="Sage" aria-pressed="false"></button>
+              <button type="button" class="swatch" data-color="#7c5cff" style="--swatch:#7c5cff" aria-label="Grape" aria-pressed="false"></button>
+            </div>
+          </div>
+          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name pet-name-copy">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
+          <div class="sheet-options" id="sheetOptions" hidden>
+            <span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div>
+            <label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label>
+            <label class="sheet-theme">Extra notes <small>optional</small><input id="sheetNotes" maxlength="300" placeholder="e.g. include a sleepy one and a birthday one"></label>
+          </div>
           <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this character as a reference">×</button></div>
-          <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
-          <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>
-          <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
-          <button class="secondary full apply-brand" id="applyBrand" disabled>Apply design to collection <span>→</span></button>
-          <p class="arcade-note" id="designNote">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
+          <button class="btn btn-ink btn-block" id="generatePattern">Generate with Arcade <span>✦</span></button>
+          <p class="design-status arcade-status" id="arcadeStatus" aria-live="polite"></p>
+          <button class="btn btn-ghost btn-block" id="applyBrand" disabled>Apply design to collection <span>→</span></button>
+          <p class="small-note" id="designNote">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
         </div>
       </div>
-          <div class="lettering-mockups" id="letteringMockups" data-modes="lettering" hidden><p class="control-label">Preview on</p><div class="mockup-row"><figure class="mockup cap"><div class="mockup-art"><div class="cap-crown"><img alt=""></div><div class="cap-brim"></div></div><figcaption>Cap · embroidered front</figcaption></figure><figure class="mockup sweatshirt"><div class="mockup-art"><div class="sweat-body"><img alt=""></div></div><figcaption>Sweatshirt · chest</figcaption></figure><figure class="mockup tote-bag"><div class="mockup-art"><div class="tote-body"><img alt=""></div></div><figcaption>Canvas tote</figcaption></figure></div><p class="catalog-note">Mockups for the demo. Embroidered pieces need an embroidery maker, which isn’t connected yet.</p></div>
-    </section>
-
-    <section class="sticker-pack section workspace-view" id="stickerPack" data-route="designs" hidden>
-      <div class="sticker-pack-head"><div><p class="eyebrow">Characters &amp; sticker sheets</p><h3><span class="pet-name-copy">Whispurr</span>’s gallery</h3></div><p>Characters are their own art, drawn by Meshy. Turn any character into a sticker sheet of nine, or use it to guide an Arcade pattern. Everything downloads as a transparent PNG.</p></div>
-      <div class="sticker-grid" id="stickerGrid"></div>
-    </section>
-
-    <section class="shop-router workspace-view" data-route="shop"><div><p class="eyebrow">Shop for both of you</p><h1>Choose who we’re making for.</h1></div><div class="shop-context-tabs" role="tablist" aria-label="Shop collection"><button class="active" data-shop-view="pet">For <span class="name-copy">Whispurr</span></button><button data-shop-view="owner">For me</button></div></section>
-
-    <section class="collection section workspace-view" id="collection" data-route="shop" data-shop-panel="pet">
-      <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Whispurr</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
-      <div class="product-grid">
-        <article class="product featured" data-category="rest" data-product="Cloud Bed" data-slug="cloud-bed"><a class="product-link" href="product.html?product=cloud-bed"><div class="product-art bed-art"><div class="mini-bed branded-surface"><span class="name-copy">WHISPURR</span></div><span class="fit-badge">Best fit</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="wear" data-product="Ribbon Scarf" data-slug="ribbon-scarf"><a class="product-link" href="product.html?product=ribbon-scarf"><div class="product-art scarf-art"><div class="scarf-shape branded-surface">W</div><span class="maker-badge">Arcade-ready surface</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="walk" data-product="Everyday Harness" data-slug="everyday-harness"><a class="product-link" href="product.html?product=everyday-harness"><div class="product-art harness-art"><div class="harness-shape branded-surface"><i></i><span class="name-copy">WHISPURR</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">WHISPURR</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
+      <div class="lettering-mockups" id="letteringMockups" data-modes="lettering" hidden>
+        <p class="control-label">Preview on</p>
+        <div class="mockup-row">
+          <figure class="mockup cap"><div class="mockup-art"><div class="cap-crown"><img alt=""></div><div class="cap-brim"></div></div><figcaption>Cap · embroidered front</figcaption></figure>
+          <figure class="mockup sweatshirt"><div class="mockup-art"><div class="sweat-body"><img alt=""></div></div><figcaption>Sweatshirt · chest</figcaption></figure>
+          <figure class="mockup tote-bag"><div class="mockup-art"><div class="tote-body"><img alt=""></div></div><figcaption>Canvas tote</figcaption></figure>
+        </div>
+        <p class="catalog-note">Mockups for the demo. Embroidered pieces need an embroidery maker, which isn’t connected yet.</p>
       </div>
-      <div class="arcade-shop" data-audience="pet"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Real pieces in <span class="name-copy">WHISPURR</span>’s pattern</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
+      <div class="gallery-section sticker-pack empty" id="stickerPack">
+        <div class="sticker-pack-head"><div><p class="eyebrow">Characters &amp; sticker sheets</p><h3 class="page-title" style="font-size:clamp(28px,3vw,40px)"><span class="pet-name-copy">Whispurr</span>’s gallery</h3></div><p>Characters are their own art, drawn by Meshy. Turn any character into a sticker sheet of nine, or use it to guide an Arcade pattern. Everything downloads as a transparent PNG.</p></div>
+        <div class="sticker-grid" id="stickerGrid"></div>
+      </div>
+    </section>
+
+    <!-- 04 Shop -->
+    <section class="wrap page" id="shop" data-route="shop">
+      <div class="page-head">
+        <div><p class="eyebrow" id="shopEyebrow">Recommended for Whispurr</p><h1 class="page-title" id="shopTitle">A collection that already knows them.</h1></div>
+        <div class="segmented shop-context-tabs" role="tablist" aria-label="Shop for"><button class="active" data-shop-view="pet">For <span class="pet-name-copy">Whispurr</span></button><button data-shop-view="owner">For me</button></div>
+      </div>
+      <div class="applied-banner" id="appliedBanner" hidden></div>
+      <div class="filter-bar"><div id="shopChips"></div><small id="shopCount"></small></div>
+      <div class="product-grid" id="shopGrid"></div>
+      <div class="arcade-shop" data-audience="pet" id="arcadePanel">
+        <div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3 id="arcadeTitle">Real pieces in <span class="pet-name-copy">Whispurr</span>’s pattern</h3></div><p class="arcade-shop-note"></p></div>
+        <div class="arcade-grid"></div>
+      </div>
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
     </section>
 
-    <section class="owner-collection section workspace-view" id="for-you" data-route="shop" data-shop-panel="owner" hidden>
-      <div class="owner-intro">
-        <div><p class="eyebrow">For their favorite person</p><h2>Carry a little<br>piece of them.</h2></div>
-        <div class="owner-intro-copy"><p>The same portrait mark, name, and pattern—made for the human side of the family. Keep it subtle, make it joyful, or cover the whole thing in their face.</p><div class="owner-mode"><button class="active" data-owner-mode="subtle">Quiet nod</button><button data-owner-mode="portrait">Portrait</button><button data-owner-mode="pattern">Full pattern</button></div></div>
-      </div>
-      <div class="owner-product-grid">
-        <article class="product owner-product" data-product="Everyday Water Bottle" data-slug="water-bottle"><a class="product-link" href="product.html?product=water-bottle"><div class="owner-product-art bottle-art"><div class="bottle branded-surface"><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="maker-badge">Owner favorite</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Water Bottle</strong><small>Stainless steel · 24 oz</small></span><b>$38</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Pet Personality Stickers" data-slug="sticker-pack"><a class="product-link" href="product.html?product=sticker-pack"><div class="owner-product-art sticker-art"><div class="sticker-sheet branded-surface"><span class="sticker face owner-mark">W</span><span class="sticker name name-copy">WHISPURR</span><span class="sticker heart">♥</span><span class="sticker phrase">GOOD<br>ONE</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pet Personality Stickers</strong><small>Weatherproof · 8-piece sheet</small></span><b>$14</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Portrait Market Tote" data-slug="market-tote"><a class="product-link" href="product.html?product=market-tote"><div class="owner-product-art tote-art"><div class="tote branded-surface"><i></i><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="maker-badge arcade-badge">Pattern-ready</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Market Tote</strong><small>Heavy canvas · printed or embroidered</small></span><b>$46</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Pocket Portrait Case" data-slug="phone-case"><a class="product-link" href="product.html?product=phone-case"><div class="owner-product-art case-art"><div class="phone-case branded-surface"><i></i><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pocket Portrait Case</strong><small>Protective shell · matte finish</small></span><b>$34</b></div></a><button class="customize-product">Customize</button></article>
-      </div>
-      <div class="arcade-shop" data-audience="owner"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Their pattern, made for you</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
-      <div class="owner-ideas"><span>Next up</span><button>Keychains</button><button>Sweatshirts</button><button>Travel mugs</button><button>Notebook covers</button><button>Gift wrap</button></div>
-      <p class="catalog-note">These owner products are concept categories for specialist production partners. Arcade-generated patterns can supply print-ready surface artwork where a compatible product or fabric workflow exists.</p>
-    </section>
+    <!-- 05 Product -->
+    <section class="wrap page" id="product" data-route="product" style="padding-top:28px"></section>
 
-    <section class="cubby section workspace-view" id="cubby" data-route="home">
-      <div class="cubby-head">
-        <div><p class="eyebrow">Their little world</p><h2><span class="pet-name-copy">Whispurr</span>’s<br><em>Cubby.</em></h2></div>
-        <div class="cubby-intro">
-          <p>Everything made for <span class="pet-name-copy">Whispurr</span>, shelved by how they live: sleeping, mealtimes, heading out, lounging around the house, and keepsakes for you.</p>
-          <p class="cubby-note" id="cubbyNote" aria-live="polite"></p>
-          <button class="primary" id="orderCubby" disabled>Order what’s ready <span>→</span></button>
+    <!-- 06 Cubby -->
+    <section class="cubby" id="cubby" data-route="home">
+      <div class="wrap page">
+        <div class="cubby-head">
+          <div><p class="eyebrow">Their little world</p><h1 class="page-title"><span class="pet-name-copy">Whispurr</span>’s<br><em>Cubby.</em></h1></div>
+          <div class="cubby-intro">
+            <p>Everything made for <span class="pet-name-copy">Whispurr</span>, shelved by how they live: sleeping, mealtimes, heading out, lounging around the house, and keepsakes for you.</p>
+            <p class="cubby-note" id="cubbyNote" aria-live="polite"></p>
+            <button class="btn btn-ink btn-block" id="orderCubby" style="width:auto" disabled>Order what’s ready <span>→</span></button>
+          </div>
+        </div>
+        <div class="cubby-room">
+          <div class="cubby-pet" aria-hidden="true">
+            <div class="cubby-pet-model" id="cubbyModel" hidden></div>
+            <img class="cubby-pet-photo" id="cubbyPhoto" alt="" hidden>
+            <div class="dog cubby-pet-art"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
+          </div>
+          <div class="cubby-shelves" id="cubbyShelves"></div>
         </div>
       </div>
-      <div class="cubby-room">
-        <div class="cubby-pet" aria-hidden="true">
-          <div class="cubby-pet-model" id="cubbyModel" hidden></div>
-          <div class="dog cubby-pet-art"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
-        </div>
-        <div class="cubby-shelves" id="cubbyShelves"></div>
-      </div>
-    </section>
-
-    <section class="maker-section section" data-route="landing">
-      <p class="eyebrow">From screen to doorstep</p><h2>Designed by you.<br><em>Made by people we trust.</em></h2>
-      <div class="maker-flow"><div><b>01</b><span><strong>Fit review</strong>Measurements checked before production</span></div><div><b>02</b><span><strong>Maker match</strong>Sent to a vetted specialist</span></div><div><b>03</b><span><strong>One checkout</strong>Track every custom piece together</span></div></div>
-      <p class="fineprint">No inventory claims are made in this concept. Product availability and maker vetting would be confirmed during partner onboarding.</p>
     </section>
   </main>
 
-  <footer data-route="landing"><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div><a class="brand" href="#/"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a><p>Because they’re not standard size.<br>And they’re definitely not standard.</p></div>
+      <small>Concept prototype · 2026</small>
+    </div>
+  </footer>
 
-  <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
-  <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">WHISPURR</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
-  <div class="toast" id="toast" role="status" aria-live="polite">Added to your room</div>
+  <!-- Bag drawer -->
+  <div class="overlay" id="bagDrawer" hidden>
+    <div class="overlay-backdrop" data-close-bag></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="bagTitle">
+      <div class="drawer-head"><b id="bagTitle">Your bag <small id="bagHeadCount">(0)</small></b><button class="close-btn" type="button" data-close-bag aria-label="Close bag">×</button></div>
+      <div class="bag-empty" id="bagEmpty"><b>Nothing here yet.</b><p>Customize a piece to start your bag.</p><a class="btn btn-ink" style="padding:15px 22px;font-size:15px" href="#/shop" data-close-bag>Shop the collection</a></div>
+      <div class="bag-lines" id="bagLines" hidden></div>
+      <div class="bag-foot" id="bagFoot" hidden>
+        <div class="subtotal"><span>Subtotal</span><b id="bagSubtotal">$0</b></div>
+        <small>Shipping and taxes calculated at checkout.</small>
+        <div class="notice" id="bagNotice" hidden></div>
+        <button class="btn btn-checkout btn-block" id="bagCheckout">Checkout <span>→</span></button>
+        <button class="text-button" type="button" data-close-bag>Continue shopping</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Quick customizer -->
+  <div class="overlay" id="customizer" hidden>
+    <div class="overlay-backdrop" data-close-customizer></div>
+    <aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="customizerTitle"></aside>
+  </div>
+
+  <!-- Add pet -->
+  <div class="modal" id="petModal" hidden>
+    <div class="overlay-backdrop" id="petModalBackdrop"></div>
+    <form class="modal-card" id="petForm">
+      <button type="button" class="close-btn" id="closePetModal" aria-label="Close">×</button>
+      <p class="eyebrow">New pet profile</p>
+      <h3>Who’s joining the family?</h3>
+      <label class="field">Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label>
+      <label class="field">Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+      <button class="btn btn-ink btn-block" type="submit">Create profile <span>→</span></button>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastBag" hidden>View bag</button></div>
+
   <script src="lettering.js"></script>
   <script src="app.js"></script>
 </body>

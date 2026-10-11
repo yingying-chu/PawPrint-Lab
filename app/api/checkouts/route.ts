@@ -14,10 +14,19 @@ export async function POST(request: Request) {
   if (!arcadeConfigured()) {
     return Response.json({ error: "Arcade is not connected yet.", code: "ARCADE_NOT_CONFIGURED" }, { status: 503 });
   }
-  const body = await request.json().catch(() => ({})) as { productIds?: unknown };
-  const ids = (Array.isArray(body.productIds) ? body.productIds : [])
-    .filter((id): id is string => typeof id === "string")
-    .slice(0, 50);
+  const body = await request.json().catch(() => ({})) as { productIds?: unknown; lines?: unknown };
+  // `lines` carries bag quantities; `productIds` (one of each) is the older form.
+  const requested = new Map<string, number>();
+  for (const line of Array.isArray(body.lines) ? body.lines : []) {
+    const { productId, quantity } = (line ?? {}) as { productId?: unknown; quantity?: unknown };
+    if (typeof productId !== "string") continue;
+    const qty = Number.isInteger(quantity) ? Math.min(Math.max(quantity as number, 1), 99) : 1;
+    requested.set(productId, (requested.get(productId) ?? 0) + qty);
+  }
+  for (const id of Array.isArray(body.productIds) ? body.productIds : []) {
+    if (typeof id === "string" && !requested.has(id)) requested.set(id, 1);
+  }
+  const ids = [...requested.keys()].slice(0, 50);
   if (!ids.length) return Response.json({ error: "Choose at least one product." }, { status: 400 });
 
   const rows = await getDb().select().from(arcadeProducts)
@@ -29,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const checkout = await createCheckout(
       `checkout-${crypto.randomUUID()}`,
-      ready.map((row) => ({ productId: row.productId!, quantity: 1 })),
+      ready.map((row) => ({ productId: row.productId!, quantity: requested.get(row.id) ?? 1 })),
     );
     return Response.json({ checkoutUrl: checkout.checkoutUrl, checkoutId: checkout.checkoutId });
   } catch (error) {

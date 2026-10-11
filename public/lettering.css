@@ -65,15 +65,10 @@
   }
 }
 
-.lettering-options[hidden] {
-  display: none;
-}
-.lettering-options .sheet-theme {
-  margin-bottom: 12px;
-}
-.lettering-options .control-label {
-  display: block;
-  margin: 14px 0 7px;
+.lettering-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .choice-row {
   display: flex;
@@ -81,11 +76,12 @@
   gap: 6px;
 }
 .choice-row button {
-  border: 1px solid var(--line);
+  border: 1px solid rgba(31, 36, 64, 0.25);
   background: #fff;
-  padding: 8px 11px;
-  font-size: 10px;
-  font-weight: 700;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 .choice-row button.active {
@@ -93,13 +89,7 @@
   border-color: var(--ink);
   color: #fff;
 }
-.thread-palette button.active {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-#downloadLettering {
-  margin-top: 18px;
-}
+
 
 /* Mockups: simple garment shapes with the lettering placed where it would be stitched. */
 .lettering-mockups {

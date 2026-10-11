@@ -1,0 +1,249 @@
+/* Original illustrations: the hero room scene and the drawn pet (cat styles in pet-variants.css). */
+
+/* The hero scene is drawn on a fixed 560px stage, scaled to its frame by app.js. */
+.hero-stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 560px;
+  height: 560px;
+  transform-origin: 0 0;
+  transform: scale(var(--stage-scale, 1));
+  background: var(--sky-tint);
+  overflow: hidden;
+}
+.hero-stage .floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 150px;
+  background: var(--peach);
+  border-top: 2.5px solid var(--ink);
+}
+.hero-stage .sun {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: var(--sun);
+  top: 46px;
+  right: -40px;
+  border: 2.5px solid var(--ink);
+}
+.hero-stage .window {
+  position: absolute;
+  width: 150px;
+  height: 170px;
+  top: 52px;
+  left: 54px;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 75px 75px 10px 10px;
+  overflow: hidden;
+}
+.hero-stage .window::before,
+.hero-stage .window::after {
+  content: "";
+  position: absolute;
+  background: var(--ink);
+}
+.hero-stage .window::before {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2.5px;
+}
+.hero-stage .window::after {
+  top: 55%;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+}
+.hero-stage .shelf {
+  position: absolute;
+  right: 40px;
+  top: 220px;
+  width: 190px;
+  height: 70px;
+  border-bottom: 8px solid var(--ink);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+}
+.hero-stage .vase {
+  width: 38px;
+  height: 52px;
+  background: var(--mint-tint);
+  border: 2.5px solid var(--ink);
+  border-radius: 45% 45% 10px 10px;
+  display: grid;
+  place-items: center;
+  color: var(--tangerine);
+  font-size: 18px;
+}
+.hero-stage .frame {
+  background: var(--sun);
+  border: 2.5px solid var(--ink);
+  padding: 12px 9px;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  transform: rotate(4deg);
+}
+.hero-stage .bed {
+  position: absolute;
+  bottom: 38px;
+  right: 30px;
+  width: 230px;
+  height: 104px;
+  border-radius: 50% 50% 16px 16px;
+  background: var(--pink-tint);
+  border: 2.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  color: var(--tangerine);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+.hero-stage .bowl {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  width: 104px;
+  height: 46px;
+  border-radius: 8px 8px 50px 50px;
+  background: var(--tangerine);
+  border: 2.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.hero-stage .dog {
+  left: 150px;
+  bottom: 40px;
+  transform: scale(1.05);
+  transform-origin: bottom center;
+}
+
+/* The drawn pet. */
+.dog {
+  position: absolute;
+  width: 260px;
+  height: 310px;
+  z-index: 3;
+}
+.dog .body {
+  position: absolute;
+  width: 165px;
+  height: 178px;
+  left: 56px;
+  bottom: 38px;
+  border-radius: 50% 45% 25% 25%;
+  background: #c5915c;
+}
+.dog .head {
+  position: absolute;
+  width: 142px;
+  height: 135px;
+  left: 15px;
+  top: 25px;
+  border-radius: 48% 52% 48% 48%;
+  background: #d6a26c;
+  z-index: 3;
+}
+.dog .ear {
+  position: absolute;
+  width: 52px;
+  height: 98px;
+  background: #7b553c;
+  top: 8px;
+  border-radius: 80% 20% 70% 30%;
+  z-index: -1;
+}
+.dog .ear.l {
+  left: -18px;
+  transform: rotate(18deg);
+}
+.dog .ear.r {
+  right: -22px;
+  transform: scaleX(-1) rotate(18deg);
+}
+.dog .eye {
+  position: absolute;
+  width: 11px;
+  height: 14px;
+  background: #202c35;
+  border-radius: 50%;
+  top: 56px;
+}
+.dog .eye.l {
+  left: 38px;
+}
+.dog .eye.r {
+  right: 38px;
+}
+.dog .snout {
+  position: absolute;
+  width: 55px;
+  height: 38px;
+  background: #ead0af;
+  border-radius: 48%;
+  left: 44px;
+  top: 74px;
+}
+.dog .snout:after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 10px;
+  border-radius: 50%;
+  background: #282628;
+  left: 20px;
+  top: 5px;
+}
+.dog .tail {
+  position: absolute;
+  width: 85px;
+  height: 110px;
+  border: 18px solid #c5915c;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  right: -15px;
+  bottom: 130px;
+  transform: rotate(20deg);
+}
+.dog .leg {
+  position: absolute;
+  background: #b57d4d;
+  width: 43px;
+  height: 95px;
+  bottom: 0;
+  border-radius: 12px 12px 28px 28px;
+}
+.dog .leg.one {
+  left: 76px;
+}
+.dog .leg.two {
+  left: 166px;
+}
+.dog .bandana {
+  position: absolute;
+  z-index: 5;
+  left: 35px;
+  top: 134px;
+  width: 105px;
+  height: 66px;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: var(--clay);
+  color: white;
+  text-align: center;
+  padding-top: 10px;
+  font-weight: 800;
+}

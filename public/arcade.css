@@ -1,56 +1,45 @@
-/* Arcade-generated patterns in the design studio and real products in the shop. */
+/* Studio features on the storefront theme: Arcade patterns and products, Meshy characters and
+   sticker sheets, the 3D twin viewer. Tokens come from theme.css. */
 
-/* Component display rules (e.g. .secondary { display: inline-flex }) otherwise beat the
-   hidden attribute, leaving "hidden" controls on screen. */
-[hidden] {
-  display: none !important;
-}
-
-.arcade-pattern {
+/* Design canvas layers */
+.arcade-pattern,
+.sticker-preview {
   position: absolute;
+  z-index: 1;
+}
+.arcade-pattern {
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  z-index: 1;
 }
-.portrait-canvas.has-arcade-pattern .portrait-dog,
-.portrait-canvas.has-arcade-pattern .spark {
-  visibility: hidden;
+.sticker-preview {
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  /* A white keyline reads as a die-cut edge. */
+  filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff)
+    drop-shadow(0 6px 10px rgba(31, 36, 64, 0.22));
 }
-.portrait-canvas.has-arcade-pattern .portrait-name {
-  z-index: 2;
-  background: rgba(255, 250, 242, 0.92);
-  padding: 4px 14px;
-}
-.portrait-canvas.has-arcade-pattern .brand-output-tabs {
+.portrait-canvas:not(.sticker-mode) .sticker-preview,
+.portrait-canvas.sticker-mode .arcade-pattern,
+.portrait-canvas.lettering-mode .arcade-pattern,
+.portrait-canvas.lettering-mode .sticker-preview {
   display: none;
-}
-
-.palette button.selected {
-  outline: 2px solid var(--ink);
-  outline-offset: 2px;
-}
-.palette-hint {
-  font-size: 9px;
-  color: #66706c;
-  margin: 8px 0 0;
 }
 
 .arcade-reference {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  margin: 16px 0 4px;
-  padding: 12px;
-  border: 1px solid var(--line);
+  padding: 12px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 14px;
   background: #fff;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
   cursor: pointer;
-}
-.arcade-reference[hidden] {
-  display: none;
 }
 .arcade-reference input {
   margin-top: 2px;
@@ -58,204 +47,53 @@
 }
 .arcade-reference small {
   display: block;
-  color: #66706c;
-  font-size: 9px;
+  color: var(--muted-2);
+  font-size: 12px;
   margin-top: 2px;
 }
-
-.arcade-status {
-  min-height: 14px;
-  font-size: 10px;
-  line-height: 1.5;
-  color: #4f5a57;
-  margin: 8px 0 0;
-}
 .arcade-status.ok {
-  color: #3f6b46;
+  color: var(--mint);
 }
 .arcade-status.warn {
-  color: #8a6a1f;
+  color: #8a5a00;
 }
 .arcade-status.error {
   color: #a84428;
 }
 .arcade-status a,
-.arcade-shop-note a {
+.arcade-shop-note a,
+.cubby-note a {
   color: inherit;
   font-weight: 700;
 }
-
 .arcade-spinner {
   display: inline-block;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   margin-right: 6px;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
   vertical-align: -1px;
-  animation: arcade-spin 0.8s linear infinite;
-}
-@keyframes arcade-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  animation: pa-spin 0.8s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .arcade-spinner {
+  .arcade-spinner,
+  .spinner {
     animation: none;
   }
 }
-
-.saved-designs .arcade-design {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.saved-designs .arcade-design img {
-  width: 22px;
-  height: 22px;
-  object-fit: cover;
-  border-radius: 3px;
-}
-.saved-designs .arcade-design.active {
-  border-color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink);
-}
 .saved-designs .arcade-design.failed {
   color: #a84428;
-}
-
-.arcade-shop {
-  margin-top: 56px;
-  padding-top: 32px;
-  border-top: 1px solid var(--line);
-}
-.arcade-shop-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 24px;
-  margin-bottom: 22px;
-}
-.arcade-shop-head h3 {
-  font: 500 clamp(28px, 3vw, 40px) / 1 var(--serif);
-  letter-spacing: -0.03em;
-  margin: 8px 0 0;
-}
-.arcade-shop-note {
-  max-width: 360px;
-  font-size: 12px;
-  line-height: 1.6;
-  margin: 0;
-}
-.arcade-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.arcade-grid:empty {
-  display: none;
-}
-.arcade-art img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.arcade-art .maker-badge {
-  z-index: 1;
-}
-.arcade-product .customize-product:disabled {
-  cursor: progress;
-  opacity: 0.7;
-}
-.arcade-product .arcade-checkout {
-  background: var(--ink);
-  color: #fff;
-}
-
-@media (max-width: 900px) {
-  .arcade-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .arcade-shop-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-@media (max-width: 560px) {
-  .arcade-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Meshy: pattern/sticker switch, sticker preview and pack, and the 3D twin. */
-
-.design-mode {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  margin-bottom: 18px;
-}
-.design-mode button {
-  border: 1px solid var(--line);
-  background: #fff;
-  padding: 10px 12px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.design-mode button small {
-  display: block;
-  font-size: 8px;
-  font-weight: 500;
-  margin-top: 3px;
-  opacity: 0.7;
-}
-.design-mode button.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-
-.sticker-preview {
-  position: absolute;
-  inset: 8%;
-  width: 84%;
-  height: 84%;
-  object-fit: contain;
-  z-index: 1;
-  /* A white keyline reads as a die-cut edge. */
-  filter: drop-shadow(0 0 0 #fff) drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
-    drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 6px 10px rgba(32, 44, 53, 0.22));
-}
-.portrait-canvas:not(.sticker-mode) .sticker-preview,
-.portrait-canvas.sticker-mode .arcade-pattern {
-  display: none;
-}
-.portrait-canvas.sticker-mode.has-sticker .portrait-dog,
-.portrait-canvas.sticker-mode.has-sticker .spark,
-.portrait-canvas.sticker-mode .brand-output-tabs {
-  visibility: hidden;
-}
-.portrait-canvas.sticker-mode .portrait-dog,
-.portrait-canvas.sticker-mode .spark {
-  visibility: visible;
 }
 .pattern-reference {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 12px 0 0;
-  padding: 8px 10px;
-  border: 1px dashed var(--ink);
-  font-size: 11px;
-}
-.pattern-reference[hidden] {
-  display: none;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--ink);
+  border-radius: 14px;
+  font-size: 13px;
 }
 .pattern-reference img {
   width: 34px;
@@ -272,197 +110,307 @@
   cursor: pointer;
 }
 
-.provider-note {
-  font-size: 9px;
-  color: #66706c;
-  margin: 8px 0 0;
+/* Sticker sheet options */
+.sheet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sheet-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sheet-sources button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--hair);
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 14px 4px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sheet-sources button img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--cream);
+}
+.sheet-sources button.active {
+  border-color: var(--ink);
+}
+.sheet-theme {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.sheet-theme small {
+  font-weight: 400;
+  color: var(--muted-2);
+  letter-spacing: 0;
+}
+.sheet-theme input {
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: #fff;
 }
 
-.sticker-pack.workspace-view {
-  min-height: 0;
-  padding-top: 0;
-}
+/* Gallery: characters, sticker sheets and lettering */
 .sticker-pack.empty {
   display: none;
 }
 .sticker-pack-head {
   display: flex;
   justify-content: space-between;
-  align-items: end;
+  align-items: flex-end;
   gap: 24px;
-  margin-bottom: 22px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
-.sticker-pack-head h3 {
-  font: 500 clamp(28px, 3vw, 40px) / 1 var(--serif);
-  letter-spacing: -0.03em;
-  margin: 8px 0 0;
-}
-.sticker-pack-head p {
-  max-width: 380px;
-  font-size: 12px;
-  line-height: 1.6;
+.sticker-pack-head p:not(.eyebrow) {
+  max-width: 420px;
   margin: 0;
+  line-height: 1.65;
+  color: var(--muted);
 }
 .sticker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
 }
 .sticker-card {
   margin: 0;
   background: #fff;
-  border: 1px solid var(--line);
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+  overflow: hidden;
+}
+.sticker-card.sheet {
+  grid-column: span 2;
 }
 .sticker-art {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  background: repeating-conic-gradient(#f3ede2 0 25%, #fbf8f2 0 50%) 0 0 / 18px 18px;
+  background: repeating-conic-gradient(#fff4e6 0 25%, #fffaf2 0 50%) 0 0 / 18px 18px;
   font: 500 32px var(--serif);
   color: #a84428;
+}
+.sticker-card.sheet .sticker-art {
+  aspect-ratio: 2 / 1;
 }
 .sticker-art img {
   width: 82%;
   height: 82%;
   object-fit: contain;
-  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff)
-    drop-shadow(0 -2px 0 #fff) drop-shadow(0 4px 6px rgba(32, 44, 53, 0.2));
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
+    drop-shadow(0 4px 6px rgba(31, 36, 64, 0.2));
 }
 .sticker-card figcaption {
-  padding: 10px 12px 12px;
-  font-size: 11px;
+  padding: 14px 16px 16px;
+  border-top: 2px solid var(--ink);
 }
 .sticker-card figcaption b,
 .sticker-card figcaption small {
   display: block;
 }
+.sticker-card figcaption b {
+  font-size: 15px;
+}
 .sticker-card figcaption small {
-  color: #66706c;
+  color: var(--muted-2);
+  font-size: 12.5px;
   margin-top: 3px;
 }
 .sticker-card figcaption span {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
-  margin-top: 8px;
+  gap: 6px 14px;
+  margin-top: 10px;
 }
 .sticker-card figcaption a,
 .sticker-card figcaption button {
   color: var(--ink);
-  font-size: 10px;
+  font-size: 12.5px;
   font-weight: 700;
   background: none;
   border: 0;
   padding: 0;
   cursor: pointer;
   text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sticker-card figcaption a:hover,
+.sticker-card figcaption button:hover {
+  color: var(--tangerine);
 }
 .sticker-card.failed figcaption small {
   color: #a84428;
 }
 
+/* Made with Arcade panel (shop) */
+.arcade-shop {
+  margin-top: 72px;
+  background: var(--paper);
+  border-radius: 28px;
+  padding: clamp(24px, 4vw, 44px);
+  border: 1px solid rgba(31, 36, 64, 0.1);
+}
+.arcade-shop-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 26px;
+}
+.arcade-shop-head .eyebrow {
+  margin-bottom: 12px;
+}
+.arcade-shop-head h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(28px, 3vw, 40px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.arcade-shop-note {
+  margin: 0;
+  color: var(--muted-2);
+  max-width: 360px;
+  line-height: 1.5;
+  font-size: 13px;
+}
+.arcade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.arcade-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 10px;
+  border: 1px solid rgba(31, 36, 64, 0.08);
+}
+.arcade-card-art {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: repeating-linear-gradient(135deg, rgba(31, 36, 64, 0.05) 0 1px, transparent 1px 12px), var(--cream);
+  display: grid;
+  place-items: center;
+}
+.arcade-card-art span {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(31, 36, 64, 0.55);
+}
+.arcade-card-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.arcade-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 4px;
+  flex: 1;
+}
+.arcade-card-copy b {
+  font-size: 14px;
+}
+.arcade-card-copy small {
+  color: var(--muted-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.arcade-card-copy em {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 2px;
+}
+/* Make / making / ready buttons, shared with the Cubby. */
+.arcade-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+.arcade-btn.ink {
+  background: var(--ink);
+  color: #fff;
+}
+.arcade-btn.ink:hover {
+  background: var(--tangerine);
+  color: #fff;
+}
+.arcade-btn.soft {
+  background: var(--cream);
+  color: var(--ink);
+}
+.arcade-btn.soft:disabled {
+  color: var(--muted-2);
+  cursor: default;
+}
+.arcade-btn.ready {
+  background: var(--mint);
+  color: #fff;
+}
+.arcade-btn.ready:hover {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* 3D twin viewer */
 .twin-model {
   position: absolute;
   inset: 0;
   z-index: 2;
-}
-.twin-model[hidden] {
-  display: none;
+  background: #bfe6ff;
 }
 .twin-model model-viewer {
   width: 100%;
   height: 100%;
   --poster-color: transparent;
 }
-.twin-card.has-3d-model #petModel,
-.twin-card.has-3d-model .measure-line,
-.twin-card.has-3d-model .rotate-control {
-  display: none;
-}
 .twin-model-error {
   margin: 0;
-  padding: 24px;
-  font-size: 11px;
+  padding: 60px 24px;
+  font-size: 12px;
   color: #a84428;
 }
 
-@media (max-width: 900px) {
-  .sticker-pack-head {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* Sticker sheets: made from a character, shown wider so the nine stickers read. */
-.sticker-card.sheet {
-  grid-column: span 2;
-}
-.sheet-options {
-  margin: 16px 0 4px;
-}
-.sheet-options[hidden] {
-  display: none;
-}
-.sheet-sources {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 12px;
-}
-.sheet-sources button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--line);
-  background: #fff;
-  padding: 5px 10px 5px 5px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.sheet-sources button img {
-  width: 44px;
-  height: 44px;
-  object-fit: contain;
-}
-.sheet-sources button.active {
-  border-color: var(--ink);
-  box-shadow: inset 0 0 0 1px var(--ink);
-}
-.sheet-theme {
-  display: block;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-.sheet-theme input {
-  display: block;
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  background: #fff;
-  font-size: 15px;
-  letter-spacing: 0.05em;
-}
 @media (max-width: 560px) {
-  .design-mode {
-    grid-template-columns: 1fr;
-  }
   .sticker-card.sheet {
     grid-column: auto;
   }
-}
-
-/* Controls belong to specific studio modes; class display rules would otherwise beat [hidden]. */
-[data-modes][hidden] {
-  display: none !important;
-}
-.sheet-theme + .sheet-theme {
-  margin-top: 12px;
-}
-.sheet-theme small {
-  text-transform: none;
-  letter-spacing: 0;
-  color: #66706c;
+  .sticker-card.sheet .sticker-art {
+    aspect-ratio: 1;
+  }
 }

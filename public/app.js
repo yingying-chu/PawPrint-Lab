@@ -1,12 +1,21 @@
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
-const toast = (message) => {
-  const el = $("#toast");
-  el.textContent = message;
-  el.classList.add("show");
+const escapeHtml = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+function toast(message, { bag = false } = {}) {
+  $("#toastText").textContent = message;
+  $("#toastBag").hidden = !bag;
+  $("#toast").classList.add("show");
   clearTimeout(window.toastTimer);
-  window.toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
-};
+  window.toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2800);
+}
+$("#toastBag").addEventListener("click", () => {
+  $("#toast").classList.remove("show");
+  openBag();
+});
 const emptyMeasurements = () => ({
   unit: "cm",
   back: "",
@@ -28,23 +37,221 @@ const state = {
     },
   ],
   activePetId: "whispurr",
-  brandReady: false,
-  bag: 0,
   shopView: "pet",
+  shopFilter: "all",
+  ownerMode: "subtle",
   route: "landing",
   measureUnit: "cm",
+  twinCreating: false,
+  pdp: { slug: "cloud-bed", thumb: 0, qty: 1, pers: 0, trim: 0, acc: 0 },
+  custSlug: null,
 };
 const activePet = () => state.pets.find((p) => p.id === state.activePetId);
 const petName = (pet) => pet.name.trim() || "Your pet";
-const escapeHtml = (value) =>
-  String(value).replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
-  );
 const SIGN_IN_URL = `/signin-with-chatgpt?return_to=${encodeURIComponent("/index.html#/studio")}`;
 const safeId = (name) =>
   `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36).slice(-4)}`;
+const money = (amount, currency = "USD") =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number(amount) % 1 ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(Number(amount));
+
+// ---- Catalog: concept pieces from specialist makers (not orderable yet) ----
+const PRODUCTS = [
+  { slug: "cloud-bed", name: "The Cloud Bed", sub: "Washable canvas · embroidered", price: 128, audience: "pet", cat: "rest", badge: "Best fit", tint: "#ffe0cc" },
+  { slug: "ribbon-scarf", name: "Ribbon Scarf", sub: "Silk twill · custom print", price: 42, audience: "pet", cat: "wear", badge: "Arcade-ready surface", tint: "#ffd6e5" },
+  { slug: "everyday-harness", name: "Everyday Harness", sub: "Fit-matched · padded", price: 68, audience: "pet", cat: "walk", badge: "", tint: "#cdf2e2" },
+  { slug: "portrait-bowl", name: "Portrait Bowl", sub: "Stoneware · dishwasher safe", price: 54, audience: "pet", cat: "dine", badge: "", tint: "#fff0b8" },
+  { slug: "water-bottle", name: "Everyday Water Bottle", sub: "Stainless steel · 24 oz", price: 38, audience: "owner", badge: "Owner favorite", tint: "#d6ecff" },
+  { slug: "sticker-pack", name: "Pet Personality Stickers", sub: "Weatherproof · 8-piece sheet", price: 14, audience: "owner", badge: "", tint: "#ffe3f0" },
+  { slug: "market-tote", name: "Portrait Market Tote", sub: "Heavy canvas · printed or embroidered", price: 46, audience: "owner", badge: "Pattern-ready", tint: "#ffe0cc" },
+  { slug: "phone-case", name: "Pocket Portrait Case", sub: "Protective shell · matte finish", price: 34, audience: "owner", badge: "", tint: "#e5ddff" },
+];
+const productBySlug = (slug) => PRODUCTS.find((p) => p.slug === slug);
+const PERSONALIZATION = ["Name + portrait mark", "Name only", "Pattern only", "No personalization"];
+const TRIMS = [
+  ["#ff6b3d", "Clay"],
+  ["#ffc93c", "Butter"],
+  ["#14936c", "Sage"],
+  ["#7c5cff", "Grape"],
+];
+
+// ---- Bag: kept on this device. Arcade lines can be checked out; concept lines can't yet ----
+const BAG_KEY = "pawprint.bag.v1";
+const bag = {
+  lines: [],
+  open: false,
+  confirming: false,
+  load() {
+    try {
+      this.lines = JSON.parse(localStorage.getItem(BAG_KEY) || "[]");
+    } catch {
+      this.lines = [];
+    }
+  },
+  save() {
+    try {
+      localStorage.setItem(BAG_KEY, JSON.stringify(this.lines));
+    } catch {
+      // Private browsing or blocked storage: the bag still works for this visit.
+    }
+    renderBag();
+  },
+  add(line) {
+    const existing = this.lines.find((l) => l.key === line.key);
+    if (existing) existing.qty += line.qty;
+    else this.lines.push(line);
+    this.confirming = false;
+    this.save();
+  },
+  count: () => bag.lines.reduce((n, l) => n + l.qty, 0),
+};
+function addConceptToBag(slug, qty = 1, persIndex = state.pdp.pers, trimIndex = state.pdp.trim) {
+  const product = productBySlug(slug);
+  const pers = PERSONALIZATION[persIndex];
+  const trim = TRIMS[trimIndex][1];
+  bag.add({
+    key: `${slug}|${pers}|${trim}`,
+    kind: "concept",
+    slug,
+    name: product.name,
+    price: product.price,
+    qty,
+    detail: `${pers} · ${trim} trim`,
+    tint: product.tint,
+  });
+  toast(`${product.name} added for ${petName(activePet())}`, { bag: true });
+}
+function addArcadeToBag(product) {
+  if (!product || product.status !== "succeeded") return false;
+  if (bag.lines.some((l) => l.key === `arcade|${product.id}`)) return true;
+  bag.add({
+    key: `arcade|${product.id}`,
+    kind: "arcade",
+    productId: product.id,
+    name: product.title || product.categoryName,
+    price: Number(product.unitPrice?.amount ?? 0),
+    currency: product.unitPrice?.currency || "USD",
+    qty: 1,
+    detail: product.selectionLabel || "Made by Arcade",
+    image: product.imageUrl || null,
+    tint: "#e6f4ff",
+  });
+  return true;
+}
+function openBag({ confirming = false } = {}) {
+  bag.open = true;
+  bag.confirming = confirming;
+  renderBag();
+}
+function closeBag() {
+  bag.open = false;
+  bag.confirming = false;
+  renderBag();
+}
+function renderBag() {
+  const count = bag.count();
+  $("#bagCount").textContent = count;
+  $("#bagHeadCount").textContent = `(${count})`;
+  $("#bagDrawer").hidden = !bag.open;
+  document.body.classList.toggle("overlay-open", bag.open || !$("#customizer").hidden);
+  const has = bag.lines.length > 0;
+  $("#bagEmpty").hidden = has;
+  $("#bagLines").hidden = !has;
+  $("#bagFoot").hidden = !has;
+  if (!has) return;
+  const name = petName(activePet()).toUpperCase();
+  $("#bagLines").innerHTML = bag.lines
+    .map(
+      (l) => `<div class="bag-line">
+        <span class="bag-thumb" style="--tint:${escapeHtml(l.tint || "#fff4e6")}">${l.image ? `<img src="${escapeHtml(l.image)}" alt="">` : escapeHtml(name)}</span>
+        <div class="bag-line-body">
+          <div><b>${escapeHtml(l.name)}</b><b>${money(l.price * l.qty, l.currency)}</b></div>
+          <small>${escapeHtml(l.detail)}</small>
+          ${l.kind === "concept" ? '<small class="concept-tag">Concept piece · not orderable yet</small>' : ""}
+          <div class="bag-line-actions">
+            <div class="mini-stepper"><button type="button" data-bag-dec="${escapeHtml(l.key)}" aria-label="Decrease quantity">−</button><span>${l.qty}</span><button type="button" data-bag-inc="${escapeHtml(l.key)}" aria-label="Increase quantity">+</button></div>
+            <button type="button" class="remove-link" data-bag-remove="${escapeHtml(l.key)}">Remove</button>
+          </div>
+        </div>
+      </div>`,
+    )
+    .join("");
+  const subtotal = bag.lines.reduce((n, l) => n + l.price * l.qty, 0);
+  $("#bagSubtotal").textContent = money(subtotal);
+  const orderable = bag.lines.filter((l) => l.kind === "arcade");
+  const concepts = bag.lines.length - orderable.length;
+  const notice = $("#bagNotice");
+  if (bag.confirming) {
+    notice.hidden = false;
+    notice.innerHTML =
+      "This opens Arcade’s checkout in a new tab. Paying there places a real order that will be made and shipped." +
+      (concepts ? `<br><br>${concepts} concept piece${concepts > 1 ? "s stay" : " stays"} in your bag; they can’t be ordered yet.` : "");
+  } else if (!orderable.length) {
+    notice.hidden = false;
+    notice.textContent =
+      "These are concept pieces from makers we haven’t connected yet, so they can’t be ordered. Make a real piece with Arcade from the shop or the Cubby.";
+  } else notice.hidden = true;
+  const checkout = $("#bagCheckout");
+  checkout.disabled = !orderable.length;
+  checkout.innerHTML = `${bag.confirming ? "Continue to secure checkout" : orderable.length && concepts ? `Checkout ${orderable.length} Arcade piece${orderable.length > 1 ? "s" : ""}` : "Checkout"} <span>→</span>`;
+}
+$("#bagLines").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const key = btn.dataset.bagInc || btn.dataset.bagDec || btn.dataset.bagRemove;
+  const line = bag.lines.find((l) => l.key === key);
+  if (!line) return;
+  if (btn.dataset.bagInc) line.qty += 1;
+  if (btn.dataset.bagDec) line.qty -= 1;
+  if (btn.dataset.bagRemove || line.qty < 1) bag.lines = bag.lines.filter((l) => l !== line);
+  bag.confirming = false;
+  bag.save();
+});
+$$("[data-close-bag]").forEach((el) => el.addEventListener("click", closeBag));
+$("#bagButton").addEventListener("click", () => openBag());
+$("#bagCheckout").addEventListener("click", async (e) => {
+  const lines = bag.lines.filter((l) => l.kind === "arcade");
+  if (!lines.length) return;
+  if (!bag.confirming) {
+    bag.confirming = true;
+    return renderBag();
+  }
+  // Open the tab synchronously so popup blockers allow it, then point it at Arcade.
+  const tab = window.open("", "_blank");
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    const { checkoutUrl } = await api("/api/checkouts", {
+      method: "POST",
+      body: { lines: lines.map((l) => ({ productId: l.productId, quantity: l.qty })) },
+    });
+    if (tab) {
+      tab.opener = null;
+      tab.location.href = checkoutUrl;
+    } else location.href = checkoutUrl;
+    closeBag();
+    toast("Opened Arcade’s secure checkout in a new tab");
+  } catch (error) {
+    tab?.close();
+    toast(error.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (bag.open) closeBag();
+  if (!$("#customizer").hidden) closeCustomizer();
+  if (!$("#petModal").hidden) $("#petModal").hidden = true;
+});
+
+// ---- Routing ----
 const routeAliases = {
+  "": "landing",
   studio: "studio",
   pets: "studio",
   designs: "designs",
@@ -52,75 +259,257 @@ const routeAliases = {
   shop: "shop",
   collection: "shop",
   "for-you": "shop",
+  product: "product",
   home: "home",
   space: "home",
   cubby: "home",
 };
+const hashPath = () => location.hash.replace(/^#\/?/, "").split("?")[0];
+const hashParams = () => new URLSearchParams(location.hash.split("?")[1] || "");
 function currentRoute() {
-  const key = location.hash.replace(/^#\/?/, "").split("?")[0];
-  return routeAliases[key] || "landing";
-}
-function renderShopView() {
-  const view = state.shopView;
-  $$(".shop-context-tabs button").forEach((btn) =>
-    btn.classList.toggle("active", btn.dataset.shopView === view),
-  );
-  $$("[data-shop-panel]").forEach(
-    (panel) => (panel.hidden = panel.dataset.shopPanel !== view),
-  );
+  return routeAliases[hashPath().split("/")[0]] || "landing";
 }
 function renderRoute() {
   const route = currentRoute();
+  const changed = route !== state.route;
   state.route = route;
   document.body.dataset.route = route;
   $$("[data-route]").forEach((el) => (el.hidden = el.dataset.route !== route));
+  const tab = route === "product" ? "shop" : route;
   $$("[data-nav-route]").forEach((link) => {
-    const selected = link.dataset.navRoute === route;
+    const selected = link.dataset.navRoute === tab;
     link.classList.toggle("active", selected);
-    link.setAttribute("aria-selected", String(selected));
-    link.tabIndex = selected ? 0 : -1;
+    if (selected) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
   if (route === "shop") {
-    const requested = new URLSearchParams(
-      location.hash.split("?")[1] || "",
-    ).get("view");
-    if (["pet", "owner"].includes(requested)) state.shopView = requested;
-    renderShopView();
-    renderArcadeShop();
+    const params = hashParams();
+    if (["pet", "owner"].includes(params.get("view"))) state.shopView = params.get("view");
+    if (params.get("filter")) state.shopFilter = params.get("filter");
+    renderShop();
+  }
+  if (route === "product") {
+    const slug = hashPath().split("/")[1];
+    if (slug && slug !== state.pdp.slug) state.pdp = { slug, thumb: 0, qty: 1, pers: 0, trim: 0, acc: 0 };
+    renderProduct();
   }
   if (route === "designs") updateReferenceOption();
   if (route === "home") renderCubby();
-  $("#customizer").classList.remove("open");
-  const first = $(`[data-route="${route}"]:not([hidden])`);
-  if (first) {
-    first.classList.add("app-route-enter");
-    setTimeout(() => first.classList.remove("app-route-enter"), 320);
-  }
-  window.scrollTo({ top: 0, behavior: "auto" });
+  if (route === "landing") requestAnimationFrame(fitHeroStage);
+  closeBag();
+  closeCustomizer();
+  if (changed || route === "product") window.scrollTo({ top: 0, behavior: "auto" });
 }
-$(".workspace-tabs").addEventListener("keydown", (event) => {
-  const tabs = $$("[data-nav-route]"),
-    current = tabs.indexOf(document.activeElement);
-  if (current < 0) return;
-  let next = current;
-  if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
-  else if (event.key === "ArrowLeft")
-    next = (current - 1 + tabs.length) % tabs.length;
-  else if (event.key === "Home") next = 0;
-  else if (event.key === "End") next = tabs.length - 1;
-  else return;
-  event.preventDefault();
-  tabs[next].focus();
-  tabs[next].click();
+window.addEventListener("hashchange", renderRoute);
+
+// ---- 01 Home ----
+const HERO_TILES = [
+  ["The Cloud Bed", "from $128", "#ffd6e5", "cloud-bed"],
+  ["Everyday Harness", "from $68", "#ffc93c", "everyday-harness"],
+  ["Market Tote", "from $46", "#d6ecff", "market-tote"],
+  ["Portrait Bowl", "from $54", "#cdf2e2", "portrait-bowl"],
+];
+const CATEGORY_LINKS = [
+  ["Rest", "#ffd6e5", "#/shop?view=pet&filter=rest"],
+  ["Wear", "#ffc93c", "#/shop?view=pet&filter=wear"],
+  ["Walk", "#cdf2e2", "#/shop?view=pet&filter=walk"],
+  ["Dine", "#d6ecff", "#/shop?view=pet&filter=dine"],
+  ["For you", "#e5ddff", "#/shop?view=owner"],
+];
+function productCard(product, { featured = false } = {}) {
+  const name = petName(activePet()).toUpperCase();
+  return `<article class="product-card">
+    <a class="product-tile" style="--tint:${product.tint}" href="#/product/${product.slug}" aria-label="${escapeHtml(product.name)} details">
+      <span class="tile-name">${featured ? escapeHtml(product.name) : escapeHtml(name)}</span>
+      <span class="tile-shot">product shot · ${escapeHtml(product.name.toLowerCase())}</span>
+      ${product.badge ? `<span class="tile-badge">${escapeHtml(product.badge)}</span>` : ""}
+      <span class="tile-view">View details →</span>
+    </a>
+    <a class="product-meta" href="#/product/${product.slug}"><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sub)}</small></span><b>${money(product.price)}</b></a>
+    <div class="product-actions">
+      <button type="button" class="btn btn-ink" data-add="${product.slug}">Add to bag</button>
+      ${featured ? `<a class="btn btn-line" href="#/product/${product.slug}">Details</a>` : `<button type="button" class="btn btn-soft" data-customize="${product.slug}">Customize</button>`}
+    </div>
+  </article>`;
+}
+function renderHome() {
+  $("#heroTiles").innerHTML = HERO_TILES.map(
+    ([label, price, bg, slug]) => `<a class="hero-tile" style="--tile:${bg}" href="#/product/${slug}">${label}<span>${price}</span></a>`,
+  ).join("");
+  $("#categoryStrip").innerHTML = CATEGORY_LINKS.map(
+    ([label, bg, href]) => `<a style="--tile:${bg}" href="${href}">${label}</a>`,
+  ).join("");
+  $("#featuredGrid").innerHTML = ["cloud-bed", "ribbon-scarf", "water-bottle", "market-tote"]
+    .map((slug) => productCard(productBySlug(slug), { featured: true }))
+    .join("");
+}
+// The hero scene is drawn on a 560px stage; scale it to the frame.
+function fitHeroStage() {
+  const frame = $("#heroFrame");
+  if (frame.clientWidth) frame.style.setProperty("--stage-scale", frame.clientWidth / 560);
+}
+new ResizeObserver(fitHeroStage).observe($("#heroFrame"));
+// Add to bag / customize buttons anywhere in the page.
+document.addEventListener("click", (e) => {
+  const add = e.target.closest("[data-add]");
+  if (add) addConceptToBag(add.dataset.add, 1, 0, 0);
+  const customize = e.target.closest("[data-customize]");
+  if (customize) openCustomizer(customize.dataset.customize);
+});
+
+// ---- 04 Shop ----
+const PET_FILTERS = [
+  ["all", "All"],
+  ["wear", "Wear"],
+  ["rest", "Rest"],
+  ["walk", "Walk"],
+  ["dine", "Dine"],
+];
+const OWNER_MODES = [
+  ["subtle", "Quiet nod"],
+  ["portrait", "Portrait"],
+  ["pattern", "Full pattern"],
+];
+function renderShop() {
+  const view = state.shopView,
+    name = petName(activePet());
+  $$(".shop-context-tabs button").forEach((btn) => btn.classList.toggle("active", btn.dataset.shopView === view));
+  $("#shopEyebrow").textContent = view === "pet" ? `Recommended for ${name}` : "For their favorite person";
+  $("#shopTitle").textContent = view === "pet" ? "A collection that already knows them." : "Carry a little piece of them.";
+  const chips = view === "pet" ? PET_FILTERS : OWNER_MODES;
+  const activeChip = view === "pet" ? state.shopFilter : state.ownerMode;
+  $("#shopChips").innerHTML = chips
+    .map(([key, label]) => `<button type="button" class="chip ${key === activeChip ? "active" : ""}" data-chip="${key}">${label}</button>`)
+    .join("");
+  const list = PRODUCTS.filter(
+    (p) => p.audience === view && (view === "owner" || state.shopFilter === "all" || p.cat === state.shopFilter),
+  );
+  $("#shopCount").textContent = `${list.length} piece${list.length === 1 ? "" : "s"}`;
+  $("#shopGrid").innerHTML = list.map((p) => productCard(p)).join("");
+  const design = (activePet().arcadeDesigns || []).find((d) => d.id === state.shopDesignId && d.status === "succeeded");
+  $("#appliedBanner").hidden = !design;
+  if (design) $("#appliedBanner").innerHTML = `<span>Showing every piece in <b>${escapeHtml(design.name)}</b>, sized for ${escapeHtml(name)}.</span>`;
+  $("#arcadePanel").dataset.audience = view;
+  $("#arcadeTitle").innerHTML =
+    view === "pet" ? `Real pieces in ${escapeHtml(name.toUpperCase())}’s pattern` : "Their pattern, made for you";
+  renderArcadeShop();
+}
+$("#shopChips").addEventListener("click", (e) => {
+  const chip = e.target.closest("[data-chip]");
+  if (!chip) return;
+  if (state.shopView === "pet") state.shopFilter = chip.dataset.chip;
+  else {
+    state.ownerMode = chip.dataset.chip;
+    toast(`${chip.textContent} treatment applied to owner products`);
+  }
+  renderShop();
 });
 $$(".shop-context-tabs button").forEach((btn) =>
   btn.addEventListener("click", () => {
     state.shopView = btn.dataset.shopView;
-    location.hash = `#/shop?view=${state.shopView}`;
-    renderShopView();
+    history.replaceState(null, "", `#/shop?view=${state.shopView}`);
+    renderShop();
   }),
 );
-window.addEventListener("hashchange", renderRoute);
+
+// ---- 05 Product ----
+const PDP_SHOTS = ["Front", "On pet", "Detail", "Scale"];
+function fitProfileText(pet) {
+  const m = pet.measurements;
+  return m.confirmed ? "Measurement-calibrated" : "Photo estimate";
+}
+function renderProduct() {
+  const product = productBySlug(state.pdp.slug) || PRODUCTS[0];
+  const pet = activePet(),
+    name = petName(pet),
+    s = state.pdp;
+  const total = money(product.price * s.qty);
+  const accordion = [
+    ["Materials & care", `${product.sub}. Personalization is printed or embroidered to order.`],
+    ["Fit", `Built from ${name}’s fit profile (${fitProfileText(pet).toLowerCase()}). Add tape measurements in Pets for a more precise fit; every order gets a fit review before production.`],
+    ["Making & delivery", "Each piece is sent to a vetted specialist once the fit is confirmed. Track every custom piece together after one checkout."],
+  ];
+  $("#product").innerHTML = `
+    <nav class="breadcrumb" aria-label="Breadcrumb"><a href="#/shop?view=${product.audience}">Shop</a><span>/</span><span>${product.audience === "pet" ? "For your pet" : "For you"}</span><span>/</span><b>${escapeHtml(product.name)}</b></nav>
+    <div class="pdp-grid">
+      <div class="pdp-gallery">
+        <div class="pdp-main" style="--tint:${product.tint};--trim:${TRIMS[s.trim][0]}">
+          <span class="tile-name">${escapeHtml(name.toUpperCase())}</span>
+          <span class="tile-shot">${["product shot", "on-pet preview", "detail shot", "scale shot"][s.thumb]} · ${escapeHtml(product.name.toLowerCase())}</span>
+          ${product.badge ? `<span class="tile-badge">${escapeHtml(product.badge)}</span>` : ""}
+        </div>
+        <div class="pdp-thumbs">${PDP_SHOTS.map((label, i) => `<button type="button" class="${i === s.thumb ? "active" : ""}" style="--tint:${product.tint}" data-pdp-thumb="${i}">${label}</button>`).join("")}</div>
+      </div>
+      <div class="pdp-info">
+        <div>
+          <p class="eyebrow">Made for ${escapeHtml(name)}</p>
+          <h1>${escapeHtml(product.name)}</h1>
+          <div class="price-line"><b>${total}</b><small>${escapeHtml(product.sub)}</small></div>
+        </div>
+        <div class="fit-note"><span>✓</span><span><b>Sized to ${escapeHtml(name)}’s fit profile</b><small>${fitProfileText(pet)}. Measurements checked before production.</small></span></div>
+        <div class="control-group"><span class="control-label">Personalization</span><div class="option-grid">${PERSONALIZATION.map((label, i) => `<button type="button" class="${i === s.pers ? "active" : ""}" data-pdp-pers="${i}">${label}</button>`).join("")}</div></div>
+        <div class="control-group"><span class="control-label">Thread / trim · <span style="font-weight:400">${TRIMS[s.trim][1]}</span></span><div class="trim-row">${TRIMS.map(([hex, label], i) => `<button type="button" class="swatch ${i === s.trim ? "active" : ""}" style="--swatch:${hex}" aria-label="${label}" data-pdp-trim="${i}"></button>`).join("")}</div></div>
+        <div class="buy-row">
+          <div class="qty-stepper"><button type="button" data-pdp-qty="-1" aria-label="Decrease quantity">−</button><span>${s.qty}</span><button type="button" data-pdp-qty="1" aria-label="Increase quantity">+</button></div>
+          <button type="button" class="btn btn-ink btn-block" data-pdp-add>Add to bag <span>${total}</span></button>
+        </div>
+        <div class="check-row" style="color:var(--muted);font-weight:400;margin-top:-8px"><span>Made to order</span><span>Fit review before making</span><span>One checkout for every piece</span></div>
+        <div class="pdp-accordion">${accordion.map(([title, body], i) => `<div><button type="button" data-pdp-acc="${i}" aria-expanded="${s.acc === i}">${title}<span>${s.acc === i ? "−" : "＋"}</span></button>${s.acc === i ? `<p>${escapeHtml(body)}</p>` : ""}</div>`).join("")}</div>
+      </div>
+    </div>`;
+}
+$("#product").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const s = state.pdp;
+  if (btn.dataset.pdpThumb) s.thumb = Number(btn.dataset.pdpThumb);
+  else if (btn.dataset.pdpPers) s.pers = Number(btn.dataset.pdpPers);
+  else if (btn.dataset.pdpTrim) s.trim = Number(btn.dataset.pdpTrim);
+  else if (btn.dataset.pdpQty) s.qty = Math.max(1, s.qty + Number(btn.dataset.pdpQty));
+  else if (btn.dataset.pdpAcc) s.acc = s.acc === Number(btn.dataset.pdpAcc) ? -1 : Number(btn.dataset.pdpAcc);
+  else if ("pdpAdd" in btn.dataset) return addConceptToBag(s.slug, s.qty, s.pers, s.trim);
+  else return;
+  renderProduct();
+});
+
+// ---- Quick customizer ----
+function openCustomizer(slug) {
+  state.custSlug = slug;
+  state.pdp = { ...state.pdp, slug, pers: 0, trim: 0, qty: 1 };
+  renderCustomizer();
+  $("#customizer").hidden = false;
+  renderBag();
+}
+function closeCustomizer() {
+  $("#customizer").hidden = true;
+  document.body.classList.toggle("overlay-open", bag.open);
+}
+function renderCustomizer() {
+  const product = productBySlug(state.custSlug);
+  if (!product) return;
+  const s = state.pdp;
+  $("#customizer .sheet").innerHTML = `
+    <div class="sheet-head"><span><p class="eyebrow">Quick customizer</p><b id="customizerTitle">${escapeHtml(product.name)}</b></span><button type="button" class="close-btn" data-close-customizer aria-label="Close">×</button></div>
+    <div class="cust-preview" style="--tint:${product.tint};--trim:${TRIMS[s.trim][0]}"><span>${escapeHtml(petName(activePet()).toUpperCase())}</span></div>
+    <div class="control-group"><span class="control-label">Personalization</span><div class="option-grid">${PERSONALIZATION.map((label, i) => `<button type="button" class="${i === s.pers ? "active" : ""}" data-cust-pers="${i}">${label}</button>`).join("")}</div></div>
+    <div class="control-group"><span class="control-label">Thread / trim · <span style="font-weight:400">${TRIMS[s.trim][1]}</span></span><div class="trim-row">${TRIMS.map(([hex, label], i) => `<button type="button" class="swatch ${i === s.trim ? "active" : ""}" style="--swatch:${hex}" aria-label="${label}" data-cust-trim="${i}"></button>`).join("")}</div></div>
+    <button type="button" class="btn btn-ink btn-block" data-cust-add>Add to bag <span>${money(product.price)}</span></button>
+    <a class="text-button" style="text-decoration:underline;text-align:center" href="#/product/${product.slug}">Open product details →</a>`;
+}
+$("#customizer").addEventListener("click", (e) => {
+  if (e.target.closest("[data-close-customizer]")) return closeCustomizer();
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  if (btn.dataset.custPers) state.pdp.pers = Number(btn.dataset.custPers);
+  else if (btn.dataset.custTrim) state.pdp.trim = Number(btn.dataset.custTrim);
+  else if ("custAdd" in btn.dataset) {
+    addConceptToBag(state.custSlug, 1, state.pdp.pers, state.pdp.trim);
+    return closeCustomizer();
+  } else return;
+  renderCustomizer();
+});
+
+// ---- 02 Pets ----
 function renderSavedDesigns() {
   const wrap = $("#savedDesigns"),
     pet = activePet(),
@@ -131,21 +520,15 @@ function renderSavedDesigns() {
       `<button type="button" class="arcade-design ${d.id === state.activeDesignId ? "active" : ""} ${d.status}" data-design-id="${escapeHtml(d.id)}">${d.thumbnailUrl ? `<img src="${escapeHtml(d.thumbnailUrl)}" alt="">` : `<span>${d.status === "failed" ? "!" : "✦"}</span>`}${escapeHtml(d.name)}${d.status === "running" ? " · generating" : d.status === "failed" ? " · failed" : ""}</button>`,
   );
   const localButtons = local.map(
-    (d, i) =>
-      `<button type="button" data-design-index="${i}"><span>✦</span>${escapeHtml(d.name)}</button>`,
+    (d, i) => `<button type="button" data-design-index="${i}"><span>✦</span>${escapeHtml(d.name)}</button>`,
   );
-  wrap.innerHTML =
-    remoteButtons.concat(localButtons).join("") ||
-    '<span class="empty-design">No saved designs yet</span>';
+  wrap.innerHTML = remoteButtons.concat(localButtons).join("") || '<span class="empty-design">No saved designs yet</span>';
   $$("[data-design-id]", wrap).forEach((btn) =>
     btn.addEventListener("click", () => {
       const design = remote.find((d) => d.id === btn.dataset.designId);
+      setDesignMode("pattern");
       showArcadeDesign(design);
-      toast(
-        design.status === "failed"
-          ? design.error || `${design.name} failed`
-          : `${design.name} loaded`,
-      );
+      toast(design.status === "failed" ? design.error || `${design.name} failed` : `${design.name} loaded`);
     }),
   );
   $$("[data-design-index]", wrap).forEach((btn) =>
@@ -153,8 +536,6 @@ function renderSavedDesigns() {
       const design = local[Number(btn.dataset.designIndex)];
       showArcadeDesign(null);
       $("#patternPrompt").value = design.prompt;
-      $("#portraitCanvas").classList.add("brand-ready");
-      $("#brandKitResult").classList.add("ready");
       $("#applyBrand").disabled = false;
       toast(`${design.name} loaded`);
     }),
@@ -173,54 +554,34 @@ function syncPetUI() {
   $$(".name-copy").forEach((x) => (x.textContent = name.toUpperCase()));
   $$(".chat-pet-name, .pet-name-copy").forEach((x) => (x.textContent = name));
   $("#portraitName").textContent = name.toUpperCase();
-  $$(".bandana,.owner-mark").forEach((x) => (x.textContent = initial));
-  $$(".scarf-shape").forEach((x) => (x.childNodes[0].nodeValue = initial));
-  $$(".product-link").forEach((a) => {
-    const url = new URL(a.href);
-    url.searchParams.set("pet", name);
-    if (a.closest(".owner-product")) url.searchParams.set("context", "owner");
-    a.href = url.pathname + url.search;
-  });
-  $$(".unit-toggle button").forEach((x) =>
-    x.classList.toggle("active", x.dataset.unit === state.measureUnit),
-  );
+  $$(".bandana").forEach((x) => (x.textContent = initial));
+  $$(".unit-toggle button").forEach((x) => x.classList.toggle("active", x.dataset.unit === state.measureUnit));
   $$(".measurement-unit").forEach((x) => (x.textContent = state.measureUnit));
   $$(".measurement-input").forEach((input) => {
     const cm = pet.measurements[input.dataset.key];
     input.dataset.cm = cm;
     input.value =
-      cm === ""
-        ? ""
-        : state.measureUnit === "cm"
-          ? Number(Number(cm).toFixed(1))
-          : Number((Number(cm) / 2.54).toFixed(1));
+      cm === "" ? "" : state.measureUnit === "cm" ? Number(Number(cm).toFixed(1)) : Number((Number(cm) / 2.54).toFixed(1));
   });
   $("#confirmMeasurements").checked = Boolean(pet.measurements.confirmed);
-  $("#photoTray").innerHTML = "";
-  pet.photos.forEach(addPhotoCard);
-  updatePhotoStatus();
+  renderPhotos();
   renderPetSwitcher();
   renderSavedDesigns();
-  const readyCopy = pet.measurements.confirmed
-    ? "Fit calibrated · measurements confirmed"
-    : "Visual twin · photo estimate";
-  $("#twinStatus").textContent = pet.twinReady
-    ? readyCopy
-    : "Waiting for photos";
-  $("#twinStatus").classList.toggle("pending", !pet.twinReady);
-  $("#pipelineState").hidden = !pet.twinReady;
+  renderTwinCard();
+  if (state.route === "shop") renderShop();
+  if (state.route === "product") renderProduct();
 }
 function renderPetSwitcher() {
   const wrap = $("#petSwitcher");
   wrap.querySelectorAll(".pet-chip").forEach((x) => x.remove());
   state.pets.forEach((p) => {
     const b = document.createElement("button");
+    b.type = "button";
     b.className = `pet-chip ${p.id === state.activePetId ? "active" : ""}`;
     b.dataset.petId = p.id;
-    b.innerHTML = `<span class="pet-avatar">${escapeHtml(petName(p)[0].toUpperCase())}</span><span><b>${escapeHtml(petName(p))}</b><small>${p.id === state.activePetId ? "Active profile" : p.type}</small></span>`;
+    b.innerHTML = `<span class="pet-avatar">${escapeHtml(petName(p)[0].toUpperCase())}</span><span><b>${escapeHtml(petName(p))}</b><small>${p.id === state.activePetId ? "Active profile" : escapeHtml(p.type)}</small></span>`;
     b.addEventListener("click", () => {
       state.activePetId = p.id;
-      state.brandReady = false;
       state.activeDesignId = null;
       syncPetUI();
       showArcadeDesign(null);
@@ -235,13 +596,8 @@ $("#addPet").addEventListener("click", () => {
   $("#petModal").hidden = false;
   setTimeout(() => $("#newPetName").focus(), 50);
 });
-$("#closePetModal").addEventListener(
-  "click",
-  () => ($("#petModal").hidden = true),
-);
-$("#petModal").addEventListener("click", (e) => {
-  if (e.target === e.currentTarget) e.currentTarget.hidden = true;
-});
+$("#closePetModal").addEventListener("click", () => ($("#petModal").hidden = true));
+$("#petModalBackdrop").addEventListener("click", () => ($("#petModal").hidden = true));
 $("#petForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const name = $("#newPetName").value.trim();
@@ -275,74 +631,57 @@ $("#petType").addEventListener("change", (e) => {
   activePet().type = e.target.value;
   syncPetUI();
 });
-$("#measureToggle").addEventListener("click", (e) => {
-  const panel = $("#measurements");
-  panel.classList.toggle("open");
-  e.currentTarget.setAttribute(
-    "aria-expanded",
-    panel.classList.contains("open"),
-  );
-  e.currentTarget.textContent = panel.classList.contains("open")
-    ? "− Hide measurements"
-    : "＋ Add measurements for a more precise fit";
-});
+function setMeasurementsOpen(open) {
+  $("#measurements").hidden = !open;
+  $("#measureToggle").setAttribute("aria-expanded", String(open));
+  $("#measureIcon").textContent = open ? "−" : "＋";
+}
+$("#measureToggle").addEventListener("click", () => setMeasurementsOpen($("#measurements").hidden));
 $$(".measurement-input").forEach((input) =>
   input.addEventListener("input", () => {
     const pet = activePet(),
-      cm =
-        input.value === ""
-          ? ""
-          : state.measureUnit === "cm"
-            ? input.value
-            : (Number(input.value) * 2.54).toFixed(2);
+      cm = input.value === "" ? "" : state.measureUnit === "cm" ? input.value : (Number(input.value) * 2.54).toFixed(2);
     input.dataset.cm = cm;
     pet.measurements[input.dataset.key] = cm;
     pet.measurements.confirmed = false;
     $("#confirmMeasurements").checked = false;
-    updateCaptureAssessment();
+    renderTwinCard();
   }),
 );
 $$(".unit-toggle button").forEach((btn) =>
   btn.addEventListener("click", () => {
     state.measureUnit = btn.dataset.unit;
     activePet().measurements.unit = state.measureUnit;
-    $$(".unit-toggle button").forEach((x) =>
-      x.classList.toggle("active", x === btn),
-    );
+    $$(".unit-toggle button").forEach((x) => x.classList.toggle("active", x === btn));
     $$(".measurement-input").forEach((input) => {
       const cm = input.dataset.cm;
       input.value =
-        cm === ""
-          ? ""
-          : state.measureUnit === "cm"
-            ? Number(Number(cm).toFixed(1))
-            : Number((Number(cm) / 2.54).toFixed(1));
+        cm === "" ? "" : state.measureUnit === "cm" ? Number(Number(cm).toFixed(1)) : Number((Number(cm) / 2.54).toFixed(1));
     });
-    $$(".measurement-unit").forEach(
-      (label) => (label.textContent = state.measureUnit),
-    );
-    toast(
-      `Measurements shown in ${state.measureUnit === "cm" ? "centimeters" : "inches"}`,
-    );
+    $$(".measurement-unit").forEach((label) => (label.textContent = state.measureUnit));
+    renderTwinCard();
   }),
 );
 $("#confirmMeasurements").addEventListener("change", (e) => {
-  const complete = ["back", "chest", "neck"].every(
-    (key) => Number(activePet().measurements[key]) > 0,
-  );
+  const complete = ["back", "chest", "neck"].every((key) => Number(activePet().measurements[key]) > 0);
   if (e.target.checked && !complete) {
     e.target.checked = false;
     toast("Enter back, chest, and neck before confirming");
     return;
   }
   activePet().measurements.confirmed = e.target.checked;
-  updateCaptureAssessment();
+  renderTwinCard();
+});
+$("#adjustFit").addEventListener("click", () => {
+  setMeasurementsOpen(true);
+  $("#measureToggle").scrollIntoView({ behavior: "smooth", block: "center" });
 });
 $("#attachPhotos").addEventListener("click", () => $("#petPhotos").click());
+$("#addAngle").addEventListener("click", () => $("#petPhotos").click());
 const setStorageStatus = (message, tone = "") => {
   const el = $("#storageStatus");
   el.className = `storage-status ${tone}`.trim();
-  el.innerHTML = `<span></span>${message}`;
+  el.innerHTML = message;
 };
 async function savePrivatePhoto(file, photo, pet) {
   setStorageStatus(`Saving ${escapeHtml(file.name)} privately…`, "saving");
@@ -352,10 +691,7 @@ async function savePrivatePhoto(file, photo, pet) {
   form.append("petName", petName(pet));
   form.append("petType", pet.type);
   try {
-    const response = await fetch("/api/uploads", {
-      method: "POST",
-      body: form,
-    });
+    const response = await fetch("/api/uploads", { method: "POST", body: form });
     const payload = await response.json().catch(() => ({}));
     if (response.status === 401) {
       photo.status = "local-only";
@@ -370,78 +706,55 @@ async function savePrivatePhoto(file, photo, pet) {
     photo.deleteAfter = payload.photo.deleteAfter;
     photo.status = "stored";
     if (photo.removed) {
-      // Removed from the tray while the upload was in flight.
+      // Removed while the upload was in flight.
       await deletePrivatePhoto(photo);
       return false;
     }
-    const date = new Date(photo.deleteAfter).toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const date = new Date(photo.deleteAfter).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     setStorageStatus(`Stored privately · automatic deletion on ${date}.`);
     return true;
   } catch (error) {
     photo.status = "local-only";
-    setStorageStatus(
-      `${escapeHtml(error.message)}. Preview remains on this device only.`,
-      "error",
-    );
+    setStorageStatus(`${escapeHtml(error.message)}. Preview remains on this device only.`, "error");
     return false;
+  } finally {
+    renderPhotos();
   }
 }
 async function deletePrivatePhoto(photo) {
   if (!photo.id) return;
   try {
-    await fetch(`/api/photos/${encodeURIComponent(photo.id)}`, {
-      method: "DELETE",
-    });
+    await fetch(`/api/photos/${encodeURIComponent(photo.id)}`, { method: "DELETE" });
   } catch {}
 }
-$("#petPhotos").addEventListener("change", async (e) => {
-  const files = [...e.target.files].slice(0, 8 - activePet().photos.length),
-    pet = activePet();
-  for (const file of files) {
-    if (!file.type.startsWith("image/")) continue;
-    const data = await fileToData(file),
-      photo = {
-        name: file.name,
-        url: data,
-        size: file.size,
-        demo: false,
-        status: "saving",
-      };
-    pet.photos.push(photo);
-    addPhotoCard(photo);
-    updatePhotoStatus();
-    await savePrivatePhoto(file, photo, pet);
-  }
-  e.target.value = "";
-  if (files.length)
-    toast(`${files.length} photo${files.length > 1 ? "s" : ""} attached`);
-});
 const fileToData = (file) =>
   new Promise((resolve) => {
     const r = new FileReader();
     r.onload = () => resolve(r.result);
     r.readAsDataURL(file);
   });
+$("#petPhotos").addEventListener("change", async (e) => {
+  const pet = activePet(),
+    files = [...e.target.files].slice(0, 8 - pet.photos.length);
+  for (const file of files) {
+    if (!file.type.startsWith("image/")) continue;
+    const photo = { name: file.name, url: await fileToData(file), size: file.size, demo: false, status: "saving" };
+    pet.photos.push(photo);
+    renderPhotos();
+    await savePrivatePhoto(file, photo, pet);
+  }
+  e.target.value = "";
+  if (files.length) toast(`${files.length} photo${files.length > 1 ? "s" : ""} attached`);
+});
 const DEMO_PHOTO_URL = "assets/whispurr-demo.jpg";
 // Made earlier by Meshy image-to-3D from the demo photo, then simplified for the web.
 const DEMO_TWIN_URL = "assets/whispurr-twin.glb";
 $("#useDemoPhoto").addEventListener("click", async () => {
   const pet = activePet();
   if (pet.photos.some((photo) => photo.demo)) return toast("The demo photo is already attached");
-  const demo = {
-    name: "whispurr-demo.jpg",
-    url: DEMO_PHOTO_URL,
-    size: 0,
-    demo: true,
-    status: "saving",
-  };
+  const demo = { name: "whispurr-demo.jpg", url: DEMO_PHOTO_URL, size: 0, demo: true, status: "saving" };
   pet.photos.push(demo);
-  addPhotoCard(demo);
-  updatePhotoStatus();
+  renderPhotos();
   // Saved like a real upload so the demo can drive the Meshy twin and stickers.
   try {
     const blob = await fetch(DEMO_PHOTO_URL).then((r) => r.blob());
@@ -450,250 +763,150 @@ $("#useDemoPhoto").addEventListener("click", async () => {
   } catch {
     demo.status = "local-only";
   }
-  updatePhotoStatus();
-  toast("Demo photo added — measurements are still needed for fit");
+  toast("Photo attached · full body and face visible");
 });
-function addPhotoCard(photo) {
-  const item = document.createElement("div");
-  item.className = "photo-thumb";
-  item.innerHTML = `<img alt="${photo.demo ? "Demo pet reference" : "Pet reference photo"}" src="${photo.url}"><button aria-label="Remove photo">×</button>`;
-  item.querySelector("button").addEventListener("click", async () => {
-    photo.removed = true;
-    await deletePrivatePhoto(photo);
-    activePet().photos = activePet().photos.filter((x) => x !== photo);
-    item.remove();
-    updatePhotoStatus();
-    setStorageStatus(
-      photo.id
-        ? "Photo removed from private storage."
-        : "Photo removed from this device.",
-    );
-  });
-  $("#photoTray").append(item);
+function photoStatusText(photo) {
+  if (photo.status === "saving") return "Saving privately…";
+  if (photo.status === "stored") return `${photo.demo ? "Full body and face visible · " : ""}stored privately for 30 days`;
+  return "On this device only";
 }
-function updateCaptureAssessment() {
+function renderPhotos() {
+  const pet = activePet();
+  $("#photoTray").innerHTML = pet.photos
+    .map(
+      (photo, i) =>
+        `<div class="photo-row"><img src="${escapeHtml(photo.url)}" alt="${photo.demo ? "Demo photo of Whispurr" : "Pet photo"}"><span><b>${i === 0 ? "Photo attached" : `Extra angle ${i}`}</b><small>${escapeHtml(photoStatusText(photo))}</small></span><button type="button" data-remove-photo="${i}">Remove</button></div>`,
+    )
+    .join("");
+  $("#photoOptions").hidden = pet.photos.length > 0;
+  $("#addAngle").hidden = !pet.photos.length || pet.photos.length >= 8;
+  updateReferenceOption();
+  renderTwinCard();
+}
+$("#photoTray").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-remove-photo]");
+  if (!btn) return;
   const pet = activePet(),
-    count = pet.photos.length,
+    photo = pet.photos[Number(btn.dataset.removePhoto)];
+  if (!photo) return;
+  photo.removed = true;
+  pet.photos = pet.photos.filter((x) => x !== photo);
+  if (!pet.photos.length && !pet.twinJob) pet.twinReady = false;
+  renderPhotos();
+  await deletePrivatePhoto(photo);
+  setStorageStatus(photo.id ? "Photo removed from private storage." : "Photo removed from this device.");
+});
+function measurementSummary(pet) {
+  const m = pet.measurements,
+    unit = state.measureUnit;
+  if (!m.confirmed) return "Photo estimate";
+  const show = (cm) => (unit === "cm" ? Number(Number(cm).toFixed(1)) : Number((Number(cm) / 2.54).toFixed(1)));
+  return `Back ${show(m.back)} · Chest ${show(m.chest)} · Neck ${show(m.neck)} ${unit}`;
+}
+/** Draws the twin card and the Pets progress from the active pet's state. */
+function renderTwinCard() {
+  const pet = activePet(),
     photo = pet.photos[0],
-    complete = ["back", "chest", "neck"].every(
-      (key) => Number(pet.measurements[key]) > 0,
-    ),
-    confirmed = complete && pet.measurements.confirmed;
-  $("#visualReadiness").textContent = count
-    ? "Ready for prototype"
-    : "Needs a photo";
-  $("#fitReadiness").textContent = confirmed
-    ? "Measurement-calibrated"
-    : complete
-      ? "Confirm measurements"
-      : "Photo estimate only";
-  if (!count) {
-    $("#captureGrade").textContent = "Waiting for a photo";
-    $("#qualityChecks").innerHTML =
-      "<li>Upload a photo to run the first checks.</li>";
-    return;
-  }
-  const resolutionPass = photo.demo || Number(photo.size) >= 200000;
-  $("#captureGrade").textContent = photo.demo
-    ? "Good demo photo · a side view adds shape"
-    : count >= 2
-      ? "Good capture set"
-      : "Usable first photo";
-  $("#qualityChecks").innerHTML =
-    `<li class="${resolutionPass ? "pass" : "warn"}">${resolutionPass ? "✓" : "!"} File resolution ${resolutionPass ? "looks sufficient" : "may be too low"}</li><li class="${photo.demo ? "warn" : "review"}">${photo.demo ? "• Full body, face and paws are visible" : "• Confirm the full body and paws are visible"}</li><li class="${confirmed ? "pass" : "warn"}">${confirmed ? "✓ Measurements confirmed for scale" : "! No verified scale yet — enter and confirm measurements"}</li>`;
+    job = pet.twinJob;
+  const inProgress = state.twinCreating || TWIN_IN_PROGRESS.includes(job?.status);
+  const ready = pet.twinReady && !inProgress;
+  $("#twinEmpty").hidden = Boolean(photo);
+  $("#twinPhoto").hidden = !photo;
+  if (photo && $("#twinPhoto").getAttribute("src") !== photo.url) $("#twinPhoto").src = photo.url;
+  $("#twinSpinner").hidden = !inProgress;
+  $(".twin-card").classList.toggle("twin-ready", ready);
+  const pill = $("#twinStatus");
+  pill.classList.toggle("ready", ready);
+  pill.classList.toggle("received", !ready && Boolean(photo));
+  if (!inProgress) pill.textContent = ready ? (job?.status === "ready" ? "3D twin ready" : "Twin ready") : photo ? "Photo received" : "Waiting for photos";
+  $("#twinNextActions").hidden = !ready;
+  const btn = $("#createTwin");
+  btn.disabled = !pet.photos.length || inProgress;
+  btn.innerHTML = `${inProgress ? "Creating your twin…" : pet.twinReady ? "Recreate twin" : "Create prototype twin"} <span>→</span>`;
+  $("#twinDims").textContent = measurementSummary(pet);
+  $("#fitProfile").textContent = fitProfileText(pet);
+  const step = ready ? 3 : photo ? 2 : 1;
+  $$(".flow-progress span").forEach((el, i) => {
+    el.classList.toggle("done", i + 1 < step);
+    el.classList.toggle("current", i + 1 === step);
+    el.querySelector("b").textContent = i + 1 < step ? "✓" : String(i + 1);
+  });
+  showTwinModel(pet);
 }
-function updatePhotoStatus() {
-  const count = activePet().photos.length;
-  $("#chatStatus").textContent = count
-    ? `${count} photo${count > 1 ? "s" : ""} attached · ${count === 1 ? "enough for a visual prototype" : count >= 3 ? "strong visual coverage" : "extra detail added"}`
-    : "Upload one photo to start · extra angles are optional";
-  updateCaptureAssessment();
-}
-$("#sendPhotoMessage").addEventListener("click", () => {
-  const input = $("#photoMessage"),
-    message = input.value.trim();
-  if (!message && !activePet().photos.length) {
-    $("#petPhotos").click();
-    return;
-  }
-  if (message) {
-    activePet().note = message;
-    const bubble = document.createElement("div");
-    bubble.className = "chat-bubble user";
-    bubble.textContent = message;
-    $("#photoChat").insertBefore(bubble, $(".shot-guide"));
-    input.value = "";
-  }
-  const reply = document.createElement("div");
-  reply.className = "chat-bubble assistant compact";
-  reply.innerHTML = `<span class="chat-mark">P</span><p>${activePet().photos.length ? "Perfect—this is enough to start. Any extra angle is completely optional." : "Got it. Add one clear photo whenever you’re ready."}</p>`;
-  $("#photoChat").append(reply);
-  toast("Message added to pet profile");
-});
-$("#photoMessage").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") $("#sendPhotoMessage").click();
-});
-$("#createTwin").addEventListener("click", async (e) => {
+$("#createTwin").addEventListener("click", async () => {
   const pet = activePet(),
     error = $("#twinError");
   error.textContent = "";
   if (!pet.photos.length) {
-    error.textContent =
-      "Add at least one photo so we have a likeness to work from.";
-    $("#photoChat").classList.add("needs-photo");
-    setTimeout(() => $("#photoChat").classList.remove("needs-photo"), 700);
+    error.textContent = "Add at least one photo so we have a likeness to work from.";
     return;
   }
-  const btn = e.currentTarget,
-    status = $("#twinStatus"),
-    savedPhoto = pet.photos.find((photo) => photo.id);
-  btn.disabled = true;
-  for (const message of [
-    "Checking capture quality…",
-    "Preparing visual-twin request…",
-    "Building the fit profile…",
-  ]) {
-    status.textContent = message;
-    await new Promise((r) => setTimeout(r, 420));
-  }
-  let jobStatus = "local_preview";
-  if (savedPhoto?.demo) {
-    // The demo photo already has a Meshy model, so demos don't spend credits.
-    pet.twinJob = { id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true };
-    jobStatus = "demo";
-  } else if (savedPhoto) {
-    try {
-      const response = await fetch("/api/twin-jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ petId: pet.id, photoId: savedPhoto.id }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok)
-        throw new Error(payload.error || "Could not prepare the 3D job");
-      pet.twinJob = payload.job;
-      jobStatus = payload.job.status;
-    } catch (jobError) {
-      error.textContent = jobError.message;
-      status.textContent = "3D job needs attention";
-      btn.disabled = false;
-      return;
+  const savedPhoto = pet.photos.find((photo) => photo.id);
+  state.twinCreating = true;
+  $("#twinStatus").textContent = "Creating…";
+  renderTwinCard();
+  try {
+    if (savedPhoto?.demo) {
+      // The demo photo already has a Meshy model, so demos don't spend credits.
+      await sleep(1200);
+      pet.twinJob = { id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true };
+    } else if (savedPhoto) {
+      const { job } = await api("/api/twin-jobs", { method: "POST", body: { petId: pet.id, photoId: savedPhoto.id } });
+      pet.twinJob = job;
+    } else {
+      // Not saved privately (signed out): a local preview twin only.
+      await sleep(1200);
+      $("#pipelineState").hidden = false;
+      $("#pipelineDetail").textContent = "Local preview · sign in to save the photo privately and build a real 3D twin with Meshy.";
     }
+    pet.twinReady = true;
+  } catch (jobError) {
+    error.textContent = jobError.message;
+  } finally {
+    state.twinCreating = false;
   }
-  pet.twinReady = true;
-  const calibrated = pet.measurements.confirmed;
-  status.textContent = calibrated
-    ? "Fit calibrated · measurements confirmed"
-    : "Visual twin · photo estimate";
-  status.classList.remove("pending");
-  $("#petModel").animate(
-    [
-      { transform: "translateX(-50%) scale(.72)", opacity: 0.2 },
-      { transform: "translateX(-50%) scale(1.14)", opacity: 1 },
-      { transform: "translateX(-50%) scale(1.08)", opacity: 1 },
-    ],
-    { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" },
-  );
-  btn.disabled = false;
-  btn.innerHTML = "Prototype twin prepared <span>✓</span>";
-  $("#pipelineState").hidden = false;
-  if (TWIN_IN_PROGRESS.includes(jobStatus)) {
+  renderTwinCard();
+  if (TWIN_IN_PROGRESS.includes(pet.twinJob?.status)) {
     showTwinProgress(pet, pet.twinJob);
     pollTwin(pet, pet.twinJob.id);
-  } else if (jobStatus === "demo") {
-    showTwinModel(pet);
-  }
-  else if (jobStatus === "waiting_for_provider_key")
-    $("#pipelineDetail").textContent =
-      "Private request saved · waiting for the Meshy API key before 3D generation starts.";
-  else
-    $("#pipelineDetail").textContent = calibrated
-      ? "Local demo preview · upload your own photo to create a private Meshy job."
-      : "Local demo preview · upload your own photo and confirm measurements for a size-aware job.";
-  $("#twinNextActions").hidden = false;
-  $$(".flow-progress span").forEach((x) => x.classList.add("active"));
-  toast(
-    TWIN_IN_PROGRESS.includes(jobStatus)
-      ? `${petName(pet)}'s 3D twin is on its way`
-      : jobStatus === "demo"
-        ? `${petName(pet)}'s 3D twin is ready`
-        : `${petName(pet)}'s prototype twin is prepared`,
-  );
+    toast(`${petName(pet)}'s 3D twin is on its way`);
+  } else if (pet.twinReady) toast(`${petName(pet)}'s twin is ready`);
 });
-$("#rotatePet").addEventListener("click", () =>
-  $("#petModel").classList.toggle("flipped"),
-);
-$("#adjustFit").addEventListener("click", () => {
-  $("#measurements").classList.add("open");
-  $("#measureToggle").setAttribute("aria-expanded", "true");
-  $("#measureToggle").textContent = "− Hide measurements";
-  toast("Measurements opened");
-});
+
+// ---- 03 Designs: shared controls ----
 $$(".style").forEach((btn) =>
   btn.addEventListener("click", () => {
-    $$(".style").forEach((x) => x.classList.remove("active"));
-    btn.classList.add("active");
-    const canvas = $("#portraitCanvas");
-    // Toggle only the style classes so the Arcade pattern layer survives.
-    ["cutout", "minimal"].forEach((style) =>
-      canvas.classList.toggle(style, btn.dataset.style === style),
-    );
+    $$(".style").forEach((x) => x.classList.toggle("active", x === btn));
   }),
 );
 $$(".palette button[data-color]").forEach((btn) =>
   btn.addEventListener("click", () => {
     btn.classList.toggle("selected");
     btn.setAttribute("aria-pressed", String(btn.classList.contains("selected")));
-    if (btn.classList.contains("selected"))
-      document.documentElement.style.setProperty("--clay", btn.dataset.color);
-    const count = selectedColors().length;
-    toast(count ? `${count} color${count > 1 ? "s" : ""} in this design` : "Arcade will choose the colors");
-  }),
-);
-$$(".brand-output-tabs span").forEach((tab, i) =>
-  tab.addEventListener("click", () => {
-    $$(".brand-output-tabs span").forEach((x) => x.classList.remove("active"));
-    tab.classList.add("active");
-    $("#portraitCanvas").dataset.view = ["mark", "wordmark", "pattern"][i];
-    toast(`${tab.textContent} preview`);
   }),
 );
 $("#newDesign").addEventListener("click", () => {
-  $("#portraitCanvas").className = "portrait-canvas";
-  delete $("#portraitCanvas").dataset.view;
-  $("#brandKitResult").classList.remove("ready");
-  $("#applyBrand").disabled = true;
-  $("#generatePattern").innerHTML = "Generate with Arcade <span>✦</span>";
   showArcadeDesign(null);
   setArcadeStatus("");
-  $("#patternPrompt").value =
-    `A fresh design inspired by ${petName(activePet())}, playful shapes and warm colors.`;
+  $("#applyBrand").disabled = true;
+  $("#generatePattern").innerHTML = generateLabel();
+  $("#patternPrompt").value = `A fresh design inspired by ${petName(activePet())}, playful shapes and warm colors.`;
   $$(".style").forEach((x, i) => x.classList.toggle("active", i === 0));
   toast("New design canvas ready");
 });
 async function saveLocalPreviewDesign(btn, reason) {
   btn.disabled = true;
-  for (const message of [
-    "Drawing portrait mark…",
-    "Setting name treatment…",
-    "Tiling the repeat pattern…",
-  ]) {
-    btn.innerHTML = `${message} <span>✦</span>`;
-    await sleep(430);
-  }
-  state.brandReady = true;
+  btn.innerHTML = "Generating… <span>✦</span>";
+  $("#canvasHint").textContent = "generating a local preview…";
+  await sleep(1200);
   const designs = activePet().designs || (activePet().designs = []),
-    design = {
-      name: `Preview ${designs.length + 1}`,
-      prompt: $("#patternPrompt").value,
-    };
+    design = { name: `Preview ${designs.length + 1}`, prompt: $("#patternPrompt").value };
   designs.push(design);
   showArcadeDesign(null);
-  $("#portraitCanvas").classList.add("brand-ready");
-  $("#brandKitResult").classList.add("ready");
   $("#applyBrand").disabled = false;
   btn.disabled = false;
-  btn.innerHTML = "Generate with Arcade <span>✦</span>";
+  btn.innerHTML = generateLabel();
+  $("#canvasHint").textContent = "your design appears here";
   renderSavedDesigns();
   setArcadeStatus(`Preview only · ${reason}`, "warn");
   toast(`${design.name} saved as a preview for ${petName(activePet())}`);
@@ -703,25 +916,16 @@ $("#generatePattern").addEventListener("click", async (e) => {
     btn = e.currentTarget;
   if (state.designMode === "lettering") return saveLettering(btn);
   if (state.designMode !== "pattern") return generateMeshyImage(btn);
-  // A chosen character already carries the likeness, so only plain patterns need the twin.
-  if (!pet.twinReady && !state.patternCharacterId) {
-    toast("Create the pet twin first so the design keeps their likeness");
-    location.hash = "#/studio";
-    return;
-  }
   const prompt = $("#patternPrompt").value.trim();
-  if (!prompt) {
-    setArcadeStatus("Describe the design you want first.", "error");
-    return;
-  }
+  if (!prompt) return setArcadeStatus("Describe the design you want first.", "error");
   if (arcade.signedIn === false)
     return saveLocalPreviewDesign(btn, `<a href="${SIGN_IN_URL}">sign in</a> to generate with Arcade.`);
-  if (arcade.configured === false)
-    return saveLocalPreviewDesign(btn, "Arcade is not connected on this site yet.");
+  if (arcade.configured === false) return saveLocalPreviewDesign(btn, "Arcade is not connected on this site yet.");
   const photo = storedPhoto(pet),
     usePhoto = Boolean(photo && $("#usePhotoReference").checked);
   btn.disabled = true;
-  btn.innerHTML = `Sending to Arcade… <span>✦</span>`;
+  btn.innerHTML = "Generating… <span>✦</span>";
+  $("#canvasHint").textContent = "generating with Arcade…";
   setArcadeStatus(usePhoto ? "Sharing the reference photo and starting the design…" : "Starting the design…");
   try {
     const { design } = await api("/api/designs", {
@@ -756,87 +960,22 @@ $("#generatePattern").addEventListener("click", async (e) => {
       setArcadeStatus("A design is still generating — showing it here.");
       state.activeDesignId = error.payload.designId;
       await pollArcadeDesign(pet, error.payload.designId);
-    } else {
-      setArcadeStatus(escapeHtml(error.message), "error");
-    }
+    } else setArcadeStatus(escapeHtml(error.message), "error");
   } finally {
     btn.disabled = false;
     btn.innerHTML = generateLabel();
+    $("#canvasHint").textContent = "your design appears here";
   }
 });
 $("#applyBrand").addEventListener("click", () => {
-  $$(".branded-surface").forEach((x) => x.classList.add("brand-applied"));
-  state.shopDesignId = activeArcadeDesign()?.status === "succeeded" ? state.activeDesignId : null;
+  const design = activeArcadeDesign();
+  state.shopDesignId = design?.status === "succeeded" ? state.activeDesignId : null;
   location.hash = "#/shop";
-  toast("Design applied to products for both of you");
+  toast(design ? `${design.name} applied to the collection` : "Preview applied to the collection");
 });
-$$(".filters button").forEach((btn) =>
-  btn.addEventListener("click", () => {
-    $$(".filters button").forEach((x) => x.classList.remove("active"));
-    btn.classList.add("active");
-    $$(".collection .product").forEach((p) =>
-      p.classList.toggle(
-        "hidden",
-        btn.dataset.filter !== "all" &&
-          p.dataset.category !== btn.dataset.filter,
-      ),
-    );
-  }),
-);
-let selectedProduct = null;
-$$(".customize-product").forEach((btn) =>
-  btn.addEventListener("click", () => {
-    selectedProduct = btn.closest(".product");
-    $("#customizerTitle").textContent = selectedProduct.dataset.product;
-    const context = selectedProduct.classList.contains("owner-product")
-      ? "&context=owner"
-      : "";
-    $("#pdpLink").href =
-      `product.html?product=${selectedProduct.dataset.slug}&pet=${encodeURIComponent(petName(activePet()))}${context}`;
-    $("#customizer").classList.add("open");
-    $("#customizer").setAttribute("aria-hidden", "false");
-  }),
-);
-$("#closeCustomizer").addEventListener("click", () => {
-  $("#customizer").classList.remove("open");
-  $("#customizer").setAttribute("aria-hidden", "true");
-});
-$$(".mini-palette button").forEach((btn) => {
-  btn.style.background = btn.dataset.color;
-  btn.addEventListener(
-    "click",
-    () => ($(".customizer-swatch").style.backgroundColor = btn.dataset.color),
-  );
-});
-$("#saveCustomization").addEventListener("click", () => {
-  if (!selectedProduct) return;
-  selectedProduct.classList.add("customized");
-  selectedProduct.querySelector(".customize-product").textContent =
-    "Customized ✓";
-  $("#customizer").classList.remove("open");
-  state.bag++;
-  $("#bagCount").textContent = state.bag;
-  toast(
-    `${selectedProduct.dataset.product} customized for ${petName(activePet())}`,
-  );
-});
-$$(".owner-mode button").forEach((btn) =>
-  btn.addEventListener("click", () => {
-    $$(".owner-mode button").forEach((x) => x.classList.remove("active"));
-    btn.classList.add("active");
-    $("#for-you").dataset.mode = btn.dataset.ownerMode;
-    toast(`${btn.textContent} treatment applied to owner products`);
-  }),
-);
-$("#bagButton").addEventListener("click", () =>
-  toast(
-    state.bag
-      ? `${state.bag} customized piece${state.bag > 1 ? "s" : ""} saved`
-      : "Customize a piece to start your bag",
-  ),
-);
+
 // ---- Arcade: real pattern generation, products, and checkout ----
-const arcade = { signedIn: null, configured: null, catalog: null, products: {} };
+const arcade = { signedIn: null, configured: null, catalog: null, products: {}, starting: new Set() };
 const polling = new Set();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function api(url, { method = "GET", body } = {}) {
@@ -889,8 +1028,6 @@ function showArcadeDesign(design) {
   } else img.removeAttribute("src");
   canvas.classList.toggle("has-arcade-pattern", Boolean(ready));
   canvas.classList.toggle("brand-ready", Boolean(ready));
-  // The brand-kit chips describe the local preview; Arcade returns a pattern only.
-  $("#brandKitResult").classList.remove("ready");
   $("#applyBrand").disabled = !ready;
   if (design?.status === "failed")
     setArcadeStatus(escapeHtml(design.error || "Arcade could not finish this design."), "error");
@@ -963,29 +1100,26 @@ function setShopNote(html) {
 async function renderArcadeShop() {
   const grids = $$(".arcade-shop .arcade-grid");
   if (arcade.signedIn === null) await loadArcadeDesigns();
-  if (arcade.signedIn === false) {
-    grids.forEach((g) => (g.innerHTML = ""));
-    return setShopNote(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to make real products with Arcade.`);
-  }
-  if (arcade.configured === false) {
-    grids.forEach((g) => (g.innerHTML = ""));
-    return setShopNote("Arcade isn't connected on this site yet, so these pieces are concepts only.");
-  }
-  const design = shopDesign();
-  if (!design) {
-    grids.forEach((g) => (g.innerHTML = ""));
-    return setShopNote(`<a href="#/designs">Generate a design</a> to see real products in ${escapeHtml(petName(activePet()))}'s pattern.`);
-  }
-  setShopNote(`Using <b>${escapeHtml(design.name)}</b>. Each piece is made to order by an Arcade maker.`);
   try {
-    if (!arcade.catalog) arcade.catalog = (await api("/api/arcade/catalog")).items;
-    if (!arcade.products[design.id]) {
+    await loadCatalog();
+  } catch (error) {
+    grids.forEach((g) => (g.innerHTML = ""));
+    return setShopNote(escapeHtml(error.message));
+  }
+  const design = arcade.signedIn && arcade.configured ? shopDesign() : null;
+  if (arcade.signedIn === false)
+    setShopNote(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to make these pieces for real with Arcade.`);
+  else if (!arcade.configured) setShopNote("Arcade isn't connected on this site yet, so these pieces can't be made.");
+  else if (!design) setShopNote("Create a pattern in Designs to unlock these printed pieces.");
+  else setShopNote(`Using <b>${escapeHtml(design.name)}</b>. Make a piece, then check out everything that’s ready together.`);
+  if (design && !arcade.products[design.id]) {
+    try {
       const { products } = await api(`/api/arcade-products?designId=${encodeURIComponent(design.id)}`);
       arcade.products[design.id] = products;
       products.filter((p) => p.status === "running").forEach((p) => pollArcadeProduct(design.id, p.id));
+    } catch (error) {
+      return setShopNote(escapeHtml(error.message));
     }
-  } catch (error) {
-    return setShopNote(escapeHtml(error.message));
   }
   grids.forEach((grid) => {
     const audience = grid.closest(".arcade-shop").dataset.audience;
@@ -994,34 +1128,69 @@ async function renderArcadeShop() {
       .map((item) => arcadeCard(item, design))
       .join("");
   });
-  $$("[data-make-category]").forEach((btn) =>
-    btn.addEventListener("click", () => makeArcadeProduct(design.id, btn.dataset.makeCategory)),
-  );
-  $$("[data-checkout-product]").forEach((btn) =>
-    btn.addEventListener("click", () => checkoutArcadeProduct(btn)),
-  );
+}
+// Make / ready buttons for Arcade pieces, shared by the shop and the Cubby.
+document.addEventListener("click", (e) => {
+  const make = e.target.closest("[data-make-category]");
+  if (make && !make.disabled) makeArcadeProduct(make.dataset.designId, make.dataset.makeCategory);
+  const ready = e.target.closest("[data-ready-product]");
+  if (ready) {
+    const product = Object.values(arcade.products).flat().find((p) => p.id === ready.dataset.readyProduct);
+    if (addArcadeToBag(product)) openBag({ confirming: true });
+  }
+});
+/** The action for one Arcade category given the current design and what's been made. */
+function arcadeAction(item, design) {
+  if (arcade.signedIn === false) return { label: "Sign in to make", tone: "soft", href: SIGN_IN_URL };
+  if (!arcade.configured || !item.categoryId) return { label: "Arcade not connected", tone: "soft", disabled: true };
+  if (!design) return { label: "Create a design first", tone: "soft", href: "#/designs" };
+  const product = (arcade.products[design.id] || []).find((p) => p.categoryId === item.categoryId);
+  if (arcade.starting.has(`${design.id}|${item.categoryId}`))
+    return { label: "Setting up…", tone: "soft", disabled: true, spin: true, product };
+  if (!product) return { label: "Make this piece", tone: "ink", make: true };
+  if (product.status === "running") return { label: "Making…", tone: "soft", disabled: true, spin: true, product };
+  if (product.status === "failed") return { label: "Try again", tone: "ink", make: true, product };
+  return { label: "Ready · checkout", tone: "ready", ready: product.id, product };
+}
+function arcadeButton(action, item, design) {
+  const cls = `arcade-btn ${action.tone}`;
+  const label = `${action.spin ? '<span class="arcade-spinner"></span>' : ""}${escapeHtml(action.label)}`;
+  if (action.href) return `<a class="${cls}" href="${escapeHtml(action.href)}">${label}</a>`;
+  const data = action.make
+    ? `data-make-category="${escapeHtml(item.categoryId)}" data-design-id="${escapeHtml(design.id)}"`
+    : action.ready
+      ? `data-ready-product="${escapeHtml(action.ready)}"`
+      : "";
+  return `<button type="button" class="${cls}" ${data} ${action.disabled ? "disabled" : ""}>${label}</button>`;
 }
 function arcadeCard(item, design) {
-  const product = (arcade.products[design.id] || []).find((p) => p.categoryId === item.categoryId);
+  const action = arcadeAction(item, design),
+    product = action.product;
   const image = product?.imageUrl || item.imageUrl;
-  let action = `<button class="customize-product" data-make-category="${escapeHtml(item.categoryId)}">Make with ${escapeHtml(design.name)}</button>`;
-  if (product?.status === "running")
-    action = `<button class="customize-product" disabled><span class="arcade-spinner"></span>Arcade is building it…</button>`;
-  else if (product?.status === "succeeded")
-    action = `<button class="customize-product arcade-checkout" data-checkout-product="${escapeHtml(product.id)}">Checkout · ${escapeHtml(formatPrice(product.unitPrice))}</button>`;
-  else if (product?.status === "failed")
-    action = `<button class="customize-product" data-make-category="${escapeHtml(item.categoryId)}">Try again</button>`;
-  return `<article class="product arcade-product"><div class="product-art arcade-art">${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product?.title || item.name)}">` : ""}<span class="maker-badge arcade-badge">${product?.status === "succeeded" ? "Ready to order" : "Made by Arcade"}</span></div><div class="product-info"><span><strong>${escapeHtml(product?.title || item.name)}</strong><small>${escapeHtml(product?.status === "failed" ? product.error || "Arcade couldn't build this" : product?.selectionLabel || item.note)}</small></span>${product?.unitPrice ? `<b>${escapeHtml(formatPrice(product.unitPrice))}</b>` : ""}</div>${action}</article>`;
+  const note = product?.status === "failed" ? product.error || "Arcade couldn't build this" : product?.selectionLabel || item.note;
+  return `<div class="arcade-card">
+    <div class="arcade-card-art">${image ? `<img src="${escapeHtml(image)}" alt="">` : `<span>${escapeHtml(item.name.toLowerCase())}</span>`}</div>
+    <span class="arcade-card-copy"><b>${escapeHtml(product?.title || item.name)}</b><small>${escapeHtml(note)}</small>${product?.unitPrice ? `<em>${escapeHtml(formatPrice(product.unitPrice))}</em>` : ""}</span>
+    ${arcadeButton(action, item, design)}
+  </div>`;
 }
 async function makeArcadeProduct(designId, categoryId) {
+  const key = `${designId}|${categoryId}`;
+  if (arcade.starting.has(key)) return;
+  arcade.starting.add(key);
+  refreshProductViews();
+  const name = arcade.catalog?.find((c) => c.categoryId === categoryId)?.name || "piece";
+  toast(`Arcade is setting up the ${name.toLowerCase()}. This can take a minute.`);
   try {
     const { product } = await api("/api/arcade-products", { method: "POST", body: { designId, categoryId } });
     const list = (arcade.products[designId] || []).filter((p) => p.categoryId !== categoryId);
     arcade.products[designId] = [product, ...list];
-    refreshProductViews();
     if (product.status === "running") pollArcadeProduct(designId, product.id);
   } catch (error) {
     toast(error.message);
+  } finally {
+    arcade.starting.delete(key);
+    refreshProductViews();
   }
 }
 async function pollArcadeProduct(designId, productId) {
@@ -1050,32 +1219,6 @@ async function pollArcadeProduct(designId, productId) {
     polling.delete(productId);
   }
 }
-function checkoutArcadeProduct(btn) {
-  return openArcadeCheckout([btn.dataset.checkoutProduct], btn);
-}
-async function openArcadeCheckout(productIds, btn) {
-  if (!productIds.length) return;
-  const ok = window.confirm(
-    `This opens Arcade's checkout in a new tab for ${productIds.length} piece${productIds.length > 1 ? "s" : ""}. Paying there places a real order that will be made and shipped. Continue?`,
-  );
-  if (!ok) return;
-  // Open the tab synchronously so popup blockers allow it, then point it at Arcade.
-  const tab = window.open("", "_blank");
-  btn.disabled = true;
-  try {
-    const { checkoutUrl } = await api("/api/checkouts", { method: "POST", body: { productIds } });
-    if (tab) {
-      tab.opener = null;
-      tab.location.href = checkoutUrl;
-    } else location.href = checkoutUrl;
-  } catch (error) {
-    tab?.close();
-    toast(error.message);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 // ---- Meshy: characters and sticker sheets (2D), and the 3D twin ----
 // A character is the pet's own illustrated art; sticker sheets (and patterns) are made from it.
 state.designMode = "pattern";
@@ -1463,10 +1606,6 @@ function showTwinModel(pet) {
   loadModelViewer().catch(() => {
     slot.innerHTML = '<p class="twin-model-error">The 3D viewer couldn\'t load. Check your connection and refresh.</p>';
   });
-  $("#twinStatus").textContent = pet.measurements.confirmed
-    ? "3D twin · measurements confirmed"
-    : "3D twin · photo estimate";
-  $("#twinStatus").classList.remove("pending");
   $("#pipelineState").hidden = false;
   $("#pipelineDetail").textContent = pet.twinJob.demo
     ? "Demo model · made earlier with Meshy from this same photo · drag to rotate."
@@ -1505,13 +1644,9 @@ async function pollTwin(pet, jobId) {
         continue;
       }
       if (pet === activePet()) {
-        if (job.status === "ready") {
-          showTwinModel(pet);
-          toast(`${petName(pet)}'s 3D twin is ready`);
-        } else if (job.status === "failed") {
-          $("#twinStatus").textContent = "3D model needs attention";
-          $("#twinError").textContent = job.error || "Meshy couldn't build the 3D model.";
-        }
+        if (job.status === "failed") $("#twinError").textContent = job.error || "Meshy couldn't build the 3D model.";
+        renderTwinCard();
+        if (job.status === "ready") toast(`${petName(pet)}'s 3D twin is ready`);
       }
       return;
     }
@@ -1524,7 +1659,7 @@ async function pollTwin(pet, jobId) {
 async function loadPetMedia() {
   const pet = activePet();
   showSticker(null);
-  showTwinModel(pet);
+  renderTwinCard();
   renderStickerPack();
   try {
     const [{ characters }, { job }] = await Promise.all([
@@ -1539,31 +1674,34 @@ async function loadPetMedia() {
     if (pet !== activePet()) return;
     renderStickerPack();
     renderPatternReference();
-    showTwinModel(pet);
+    renderTwinCard();
+    if (state.route === "home") renderCubby();
     characters.filter((c) => c.status === "running").forEach((c) => pollCharacter(pet, c.id));
-    if (TWIN_IN_PROGRESS.includes(job?.status)) pollTwin(pet, job.id);
+    if (TWIN_IN_PROGRESS.includes(job?.status)) {
+      showTwinProgress(pet, job);
+      pollTwin(pet, job.id);
+    }
   } catch {
     // Signed out or offline: stickers and the 3D twin stay hidden.
   }
 }
 
-// ---- Cubby: every product for the pet, shelved by use case ----
+// ---- 06 Cubby: every product for the pet, shelved by use case ----
 const SHELVES = [
-  { id: "sleep", label: "Sleep", blurb: "Naps and nights" },
-  { id: "dine", label: "Mealtimes", blurb: "Bowls, mats and the table" },
-  { id: "out", label: "Out & about", blurb: "Walks and visits" },
-  { id: "home", label: "Around the house", blurb: "The spaces you share" },
-  { id: "keepsake", label: "Keepsakes", blurb: "Little pieces of them, for you" },
+  ["sleep", "Sleeping"],
+  ["dine", "Mealtimes"],
+  ["out", "Heading out"],
+  ["home", "Around the house"],
+  ["keepsake", "Keepsakes for you"],
 ];
 // Pieces Arcade can't make yet; kept visible but labelled as concepts.
 const CONCEPT_ITEMS = [
-  { name: "The Cloud Bed", slug: "cloud-bed", useCase: "sleep" },
-  { name: "Portrait Bowl", slug: "portrait-bowl", useCase: "dine" },
-  { name: "Everyday Harness", slug: "everyday-harness", useCase: "out" },
-  { name: "Everyday Water Bottle", slug: "water-bottle", useCase: "out" },
-  { name: "Portrait Market Tote", slug: "market-tote", useCase: "keepsake" },
+  ["cloud-bed", "sleep"],
+  ["portrait-bowl", "dine"],
+  ["everyday-harness", "out"],
+  ["water-bottle", "out"],
+  ["market-tote", "keepsake"],
 ];
-state.cubbyDeselected = new Set();
 
 async function loadCatalog() {
   if (arcade.catalog) return arcade.catalog;
@@ -1576,32 +1714,14 @@ function refreshProductViews() {
   if (state.route === "shop") renderArcadeShop();
   if (state.route === "home") renderCubby();
 }
-function cubbyTile({ image, title, note, chip, chipTone = "", action = "", art = "" }) {
-  return `<article class="cubby-item"><div class="cubby-item-art ${art}">${image ? `<img src="${escapeHtml(image)}" alt="">` : ""}<span class="cubby-chip ${chipTone}">${escapeHtml(chip)}</span></div><div class="cubby-item-copy"><b>${escapeHtml(title)}</b><small>${escapeHtml(note)}</small></div>${action}</article>`;
+function cubbyRow({ name, image, tint, tag, button }) {
+  return `<div class="cubby-row-item">
+    <span class="cubby-thumb" style="--tint:${tint || "#fff4e6"}">${image ? `<img src="${escapeHtml(image)}" alt="">` : ""}</span>
+    <span class="cubby-row-copy"><b>${escapeHtml(name)}</b>${tag ? `<small>${escapeHtml(tag)}</small>` : ""}${button}</span>
+  </div>`;
 }
-function arcadeTile(item, design, products) {
-  const product = design && products.find((p) => p.categoryId === item.categoryId);
-  const base = { title: item.name, note: item.note, image: item.imageUrl, art: `shelf-${item.useCase}` };
-  if (!arcade.configured || !item.categoryId) return cubbyTile({ ...base, chip: "Arcade · not connected" });
-  if (!design)
-    return cubbyTile({ ...base, chip: "Needs a design", action: '<a class="cubby-action" href="#/designs">Create a design</a>' });
-  if (!product)
-    return cubbyTile({ ...base, chip: "Made by Arcade", action: `<button class="cubby-action" data-cubby-make="${escapeHtml(item.categoryId)}">Make with ${escapeHtml(design.name)}</button>` });
-  if (product.status === "running")
-    return cubbyTile({ ...base, chip: "Arcade is making it", action: '<button class="cubby-action" disabled><span class="arcade-spinner"></span>Building…</button>' });
-  if (product.status === "failed")
-    return cubbyTile({ ...base, note: product.error || "Arcade couldn't build this", chip: "Failed", chipTone: "error", action: `<button class="cubby-action" data-cubby-make="${escapeHtml(item.categoryId)}">Try again</button>` });
-  const selected = !state.cubbyDeselected.has(product.id);
-  return cubbyTile({
-    ...base,
-    image: product.imageUrl || item.imageUrl,
-    title: product.title || item.name,
-    note: product.selectionLabel || item.note,
-    chip: product.unitPrice ? formatPrice(product.unitPrice) : "Ready",
-    chipTone: "ready",
-    action: `<label class="cubby-action cubby-pick"><input type="checkbox" data-cubby-pick="${escapeHtml(product.id)}" ${selected ? "checked" : ""}> Include in order</label>`,
-  });
-}
+const readyProducts = (design) =>
+  design ? (arcade.products[design.id] || []).filter((p) => p.status === "succeeded") : [];
 async function renderCubby() {
   const pet = activePet(),
     note = $("#cubbyNote");
@@ -1615,93 +1735,77 @@ async function renderCubby() {
     catalog = [];
   }
   const design = arcade.signedIn && arcade.configured ? shopDesign() : null;
-  let products = [];
-  if (design) {
+  if (design && !arcade.products[design.id]) {
     try {
-      if (!arcade.products[design.id]) {
-        arcade.products[design.id] = (await api(`/api/arcade-products?designId=${encodeURIComponent(design.id)}`)).products;
-        arcade.products[design.id].filter((p) => p.status === "running").forEach((p) => pollArcadeProduct(design.id, p.id));
-      }
-      products = arcade.products[design.id];
+      arcade.products[design.id] = (await api(`/api/arcade-products?designId=${encodeURIComponent(design.id)}`)).products;
+      arcade.products[design.id].filter((p) => p.status === "running").forEach((p) => pollArcadeProduct(design.id, p.id));
     } catch {
-      products = [];
+      arcade.products[design.id] = [];
     }
   }
   if (arcade.signedIn === false)
     note.innerHTML = `<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to fill these shelves with ${escapeHtml(petName(pet))}'s designs.`;
-  else if (!arcade.configured)
-    note.textContent = "Arcade isn't connected on this site yet, so these shelves show what we'd make.";
-  else if (!design)
-    note.innerHTML = `<a href="#/designs">Generate a pattern</a> to fill these shelves with ${escapeHtml(petName(pet))}'s look.`;
-  else note.innerHTML = `Shelved in <b>${escapeHtml(design.name)}</b>. Make any piece, then order everything that's ready in one checkout.`;
+  else if (!arcade.configured) note.textContent = "Arcade isn't connected on this site yet, so these shelves show what we'd make.";
+  else if (!design) note.innerHTML = `<a href="#/designs">Create a design</a> to fill the shelves with their pattern.`;
+  else note.innerHTML = `Shelved in <b>${escapeHtml(design.name)}</b>. Make any piece, then order everything that’s ready in one checkout.`;
 
-  // Printable sticker sheets first, then the characters they come from.
+  // Printable sticker sheets first, then lettering and the characters they come from.
   const keepsakes = [...stickerSheets(pet), ...letterings(pet), ...petCharacters(pet)].filter((c) => c.status === "succeeded").slice(0, 5);
-  $("#cubbyShelves").innerHTML = SHELVES.map((shelf) => {
-    const tiles = [
-      ...catalog.filter((item) => item.useCase === shelf.id).map((item) => arcadeTile(item, design, products)),
-      ...(shelf.id === "keepsake"
-        ? keepsakes.map((s) =>
-            cubbyTile({
-              image: s.imageUrl,
-              title: s.name,
-              note: { sticker_sheet: "9 stickers, ready to print", lettering: "Lettering for embroidery" }[s.kind] || "Their own character art",
-              chip: { sticker_sheet: "Sticker sheet · Meshy", lettering: "Embroidery · concept" }[s.kind] || "Character · Meshy",
-              art: "sticker-tile",
-              action: `<a class="cubby-action" href="${escapeHtml(s.imageUrl)}?download=1">Download</a>`,
+  $("#cubbyShelves").innerHTML = SHELVES.map(([id, label]) => {
+    const rows = [
+      ...catalog
+        .filter((item) => item.useCase === id)
+        .map((item) => {
+          const action = arcadeAction(item, design);
+          return cubbyRow({
+            name: action.product?.title || item.name,
+            image: action.product?.imageUrl || item.imageUrl,
+            tag: action.product?.unitPrice ? formatPrice(action.product.unitPrice) : "Made by Arcade",
+            button: arcadeButton(action, item, design),
+          });
+        }),
+      ...(id === "keepsake"
+        ? keepsakes.map((asset) =>
+            cubbyRow({
+              name: asset.name,
+              image: asset.imageUrl,
+              tint: "#fff8ee",
+              tag: { sticker_sheet: "Sticker sheet · Meshy", lettering: "Embroidery lettering" }[asset.kind] || "Character · Meshy",
+              button: `<a class="arcade-btn soft" href="${escapeHtml(asset.imageUrl)}?download=1">Download</a>`,
             }),
           )
         : []),
-      ...CONCEPT_ITEMS.filter((item) => item.useCase === shelf.id).map((item) =>
-        cubbyTile({
-          title: item.name,
-          note: "Not orderable yet",
-          chip: "Concept",
-          chipTone: "concept",
-          art: `shelf-${shelf.id}`,
-          action: `<a class="cubby-action" href="product.html?product=${item.slug}&pet=${encodeURIComponent(petName(pet))}">Details</a>`,
-        }),
-      ),
+      ...CONCEPT_ITEMS.filter(([, useCase]) => useCase === id).map(([slug]) => {
+        const product = productBySlug(slug);
+        return cubbyRow({
+          name: product.name,
+          tint: product.tint,
+          tag: `Concept · ${money(product.price)}`,
+          button: `<a class="arcade-btn soft" href="#/product/${slug}">Details</a>`,
+        });
+      }),
     ];
-    return `<section class="cubby-shelf" aria-labelledby="shelf-${shelf.id}"><header><h3 id="shelf-${shelf.id}">${shelf.label}</h3><span>${shelf.blurb}</span></header><div class="cubby-row">${tiles.join("")}</div></section>`;
+    return `<section class="cubby-shelf" aria-label="${label}"><header><h3>${label}</h3><small>${rows.length} piece${rows.length === 1 ? "" : "s"}</small></header><div class="cubby-row">${rows.join("")}</div></section>`;
   }).join("");
 
-  $$("[data-cubby-make]").forEach((btn) =>
-    btn.addEventListener("click", () => makeArcadeProduct(design.id, btn.dataset.cubbyMake)),
-  );
-  $$("[data-cubby-pick]").forEach((box) =>
-    box.addEventListener("change", () => {
-      if (box.checked) state.cubbyDeselected.delete(box.dataset.cubbyPick);
-      else state.cubbyDeselected.add(box.dataset.cubbyPick);
-      updateCubbyOrder(products);
-    }),
-  );
-  updateCubbyOrder(products);
+  const ready = readyProducts(design);
+  const btn = $("#orderCubby");
+  btn.disabled = !ready.length;
+  btn.innerHTML = `${ready.length ? `Order what’s ready (${ready.length})` : "Order what’s ready"} <span>→</span>`;
 }
-function cubbyOrderLines(products) {
-  return products.filter((p) => p.status === "succeeded" && !state.cubbyDeselected.has(p.id));
-}
-function updateCubbyOrder(products) {
-  const lines = cubbyOrderLines(products),
-    btn = $("#orderCubby");
-  btn.disabled = !lines.length;
-  const currencies = new Set(lines.map((p) => p.unitPrice?.currency).filter(Boolean));
-  const total =
-    lines.length && currencies.size === 1 && lines.every((p) => p.unitPrice)
-      ? ` · ${formatPrice({ currency: [...currencies][0], amount: String(lines.reduce((sum, p) => sum + Number(p.unitPrice.amount), 0)) })}`
-      : "";
-  btn.innerHTML = lines.length
-    ? `Order ${lines.length} ready piece${lines.length > 1 ? "s" : ""}${escapeHtml(total)} <span>→</span>`
-    : "Order what’s ready <span>→</span>";
-  btn.dataset.productIds = lines.map((p) => p.id).join(",");
-}
-$("#orderCubby").addEventListener("click", (e) =>
-  openArcadeCheckout(e.currentTarget.dataset.productIds.split(",").filter(Boolean), e.currentTarget),
-);
+$("#orderCubby").addEventListener("click", () => {
+  const ready = readyProducts(shopDesign());
+  ready.forEach((product) => addArcadeToBag(product));
+  if (ready.length) openBag({ confirming: true });
+});
 function renderCubbyPet(pet) {
   const slot = $("#cubbyModel"),
-    ready = pet.twinJob?.status === "ready" && pet.twinJob.modelUrl;
+    ready = pet.twinJob?.status === "ready" && pet.twinJob.modelUrl,
+    photo = pet.photos[0];
   $(".cubby-pet").classList.toggle("has-3d-model", Boolean(ready));
+  $(".cubby-pet").classList.toggle("has-photo", Boolean(photo) && !ready);
+  $("#cubbyPhoto").hidden = !photo || Boolean(ready);
+  if (photo && !ready) $("#cubbyPhoto").src = photo.url;
   slot.hidden = !ready;
   if (!ready) {
     slot.innerHTML = "";
@@ -1717,6 +1821,9 @@ function renderCubbyPet(pet) {
   });
 }
 
+bag.load();
+renderBag();
+renderHome();
 syncPetUI();
 renderRoute();
 loadArcadeDesigns();
