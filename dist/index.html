@@ -10,11 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="enhancements.css" />
+  <link rel="stylesheet" href="owner-collection.css" />
+  <link rel="stylesheet" href="upload-fix.css" />
 </head>
 <body>
   <header class="nav">
     <a class="brand" href="#top" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav aria-label="Main navigation"><a href="#studio">Studio</a><a href="#collection">Collection</a><a href="#home">Pet home</a></nav>
+    <nav aria-label="Main navigation"><a href="#studio">Studio</a><a href="#collection">For pets</a><a href="#for-you">For you</a><a href="#home">Pet home</a></nav>
     <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
   </header>
 
@@ -54,14 +56,14 @@
         <div class="capture-card">
           <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
           <div class="photo-chat" id="photoChat">
-            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! Send me a few photos of <b class="chat-pet-name">Milo</b>. A standing full-body view helps with shape; a clear face and side view help me catch the details.</p></div>
-            <div class="shot-guide"><span><i>1</i>Whole body</span><span><i>2</i>Face close-up</span><span><i>3</i>Side view</span><span class="optional"><i>＋</i>Favorite detail</span></div>
+            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! <b>One clear photo is enough</b> to start <b class="chat-pet-name">Milo</b>’s profile. A standing full-body photo works best. Add other angles only if you’d like more detail.</p></div>
+            <div class="shot-guide"><span><i>1</i>Best first photo</span><span class="optional"><i>＋</i>Face · optional</span><span class="optional"><i>＋</i>Side · optional</span><span class="optional"><i>＋</i>Detail · optional</span></div>
             <div class="photo-tray" id="photoTray"></div>
             <div class="chat-status" id="chatStatus">No photos attached yet</div>
           </div>
           <div class="message-composer">
             <input type="file" id="petPhotos" accept="image/*" multiple />
-            <button class="attach-button" id="attachPhotos" aria-label="Attach pet photos">＋</button>
+            <button class="attach-button" id="attachPhotos" aria-label="Upload pet photos from this device"><span>＋</span> Upload from device</button>
             <input id="photoMessage" placeholder="Add a note about their features…" aria-label="Message about your pet" />
             <button class="send-button" id="sendPhotoMessage">Send</button>
           </div>
@@ -127,6 +129,21 @@
         <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
       </div>
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
+    </section>
+
+    <section class="owner-collection section" id="for-you">
+      <div class="owner-intro">
+        <div><p class="eyebrow">For their favorite person</p><h2>Carry a little<br>piece of them.</h2></div>
+        <div class="owner-intro-copy"><p>The same portrait mark, name, and pattern—made for the human side of the family. Keep it subtle, make it joyful, or cover the whole thing in their face.</p><div class="owner-mode"><button class="active" data-owner-mode="subtle">Quiet nod</button><button data-owner-mode="portrait">Portrait</button><button data-owner-mode="pattern">Full pattern</button></div></div>
+      </div>
+      <div class="owner-product-grid">
+        <article class="product owner-product" data-product="Everyday Water Bottle" data-slug="water-bottle"><a class="product-link" href="product.html?product=water-bottle"><div class="owner-product-art bottle-art"><div class="bottle branded-surface"><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="maker-badge">Owner favorite</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Water Bottle</strong><small>Stainless steel · 24 oz</small></span><b>$38</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Pet Personality Stickers" data-slug="sticker-pack"><a class="product-link" href="product.html?product=sticker-pack"><div class="owner-product-art sticker-art"><div class="sticker-sheet branded-surface"><span class="sticker face owner-mark">M</span><span class="sticker name name-copy">MILO</span><span class="sticker heart">♥</span><span class="sticker phrase">GOOD<br>ONE</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pet Personality Stickers</strong><small>Weatherproof · 8-piece sheet</small></span><b>$14</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Portrait Market Tote" data-slug="market-tote"><a class="product-link" href="product.html?product=market-tote"><div class="owner-product-art tote-art"><div class="tote branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="maker-badge arcade-badge">Pattern-ready</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Market Tote</strong><small>Heavy canvas · printed or embroidered</small></span><b>$46</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Pocket Portrait Case" data-slug="phone-case"><a class="product-link" href="product.html?product=phone-case"><div class="owner-product-art case-art"><div class="phone-case branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pocket Portrait Case</strong><small>Protective shell · matte finish</small></span><b>$34</b></div></a><button class="customize-product">Customize</button></article>
+      </div>
+      <div class="owner-ideas"><span>Next up</span><button>Keychains</button><button>Sweatshirts</button><button>Travel mugs</button><button>Notebook covers</button><button>Gift wrap</button></div>
+      <p class="catalog-note">These owner products are concept categories for specialist production partners. Arcade-generated patterns can supply print-ready surface artwork where a compatible product or fabric workflow exists.</p>
     </section>
 
     <section class="pet-home section" id="home">
