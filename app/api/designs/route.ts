@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { designs, petPhotos } from "@/db/schema";
+import { designs, petAssets, petPhotos } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
 import {
   ARCADE_REFERENCE_MAX_BYTES,
@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     style?: string;
     colors?: unknown;
     photoId?: string;
+    characterId?: string;
   };
   const petKey = String(body.petKey ?? "").trim().slice(0, 80);
   const petName = String(body.petName ?? "").trim().slice(0, 40);
@@ -106,6 +107,29 @@ export async function POST(request: Request) {
       photoId = photo.id;
     } catch (error) {
       return arcadeErrorResponse(error, "Could not share the photo with Arcade.");
+    }
+  }
+
+  // A generated sticker can also guide the pattern; it is already the owner's artwork.
+  if (body.characterId) {
+    const [asset] = await db.select().from(petAssets)
+      .where(and(eq(petAssets.id, body.characterId), eq(petAssets.userId, user.userId)))
+      .limit(1);
+    if (!asset || asset.status !== "succeeded" || !asset.r2Key) {
+      return Response.json({ error: "That sticker isn't ready." }, { status: 404 });
+    }
+    try {
+      let referenceId = asset.arcadeReferenceId;
+      if (!referenceId) {
+        const object = await env.BUCKET?.get(asset.r2Key);
+        if (!object) return Response.json({ error: "Sticker image is missing." }, { status: 410 });
+        const contentType = asset.contentType && ARCADE_REFERENCE_TYPES.includes(asset.contentType) ? asset.contentType : "image/png";
+        referenceId = await createReference(await object.arrayBuffer(), contentType, `${asset.id}-${Date.now()}`);
+        await db.update(petAssets).set({ arcadeReferenceId: referenceId }).where(eq(petAssets.id, asset.id));
+      }
+      referenceIds.push(referenceId);
+    } catch (error) {
+      return arcadeErrorResponse(error, "Could not share the sticker with Arcade.");
     }
   }
 

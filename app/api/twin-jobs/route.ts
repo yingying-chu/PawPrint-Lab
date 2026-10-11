@@ -1,17 +1,32 @@
-import { env } from "cloudflare:workers";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petPhotos, twinJobs } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
-import { arrayBufferToDataUrl, createImageTo3DTask } from "@/lib/meshy";
-import { cleanupExpiredPhotos } from "@/lib/photo-storage";
+import { meshyConfigured } from "@/lib/meshy";
+import { cleanupExpiredPhotos, recordPetId } from "@/lib/photo-storage";
+import { refreshTwinJob, serializeTwinJob, submitTwinJob } from "@/lib/twins";
 
 export const runtime = "edge";
+
+/** Latest twin job for a pet profile, advanced by one poll. */
+export async function GET(request: Request) {
+  const user = await getApiUser();
+  if (!user) return unauthorized();
+  const petKey = new URL(request.url).searchParams.get("petKey")?.trim();
+  if (!petKey) return Response.json({ error: "petKey is required." }, { status: 400 });
+  const [row] = await getDb().select().from(twinJobs)
+    .where(and(eq(twinJobs.userId, user.userId), eq(twinJobs.petId, recordPetId(user.userId, petKey))))
+    .orderBy(desc(twinJobs.createdAt))
+    .limit(1);
+  if (!row) return Response.json({ job: null, configured: meshyConfigured() });
+  const { job, progress } = await refreshTwinJob(row).catch(() => ({ job: row, progress: 0 }));
+  return Response.json({ job: serializeTwinJob(job, progress), configured: meshyConfigured() });
+}
 
 export async function POST(request: Request) {
   const user = await getApiUser();
   if (!user) return unauthorized();
-  const body = await request.json().catch(() => ({})) as { petId?: string; photoId?: string };
+  const body = await request.json().catch(() => ({})) as { photoId?: string };
   if (!body.photoId) {
     return Response.json({ error: "A saved pet photo is required." }, { status: 400 });
   }
@@ -24,50 +39,28 @@ export async function POST(request: Request) {
   if (!photo) return Response.json({ error: "Saved photo not found or expired." }, { status: 404 });
 
   const now = new Date().toISOString();
-  const jobId = crypto.randomUUID();
-  if (!env.MESHY_API_KEY) {
-    await db.insert(twinJobs).values({
-      id: jobId,
-      petId: photo.petId,
-      userId: user.userId,
-      photoId: body.photoId,
-      status: "waiting_for_provider_key",
-      createdAt: now,
-      updatedAt: now,
-    });
-    return Response.json({ job: { id: jobId, status: "waiting_for_provider_key" } }, { status: 202 });
-  }
-  if (!env.BUCKET) return Response.json({ error: "Photo storage is unavailable." }, { status: 503 });
-
-  const object = await env.BUCKET.get(photo.r2Key);
-  if (!object) return Response.json({ error: "Saved photo has expired." }, { status: 410 });
+  const row = {
+    id: crypto.randomUUID(),
+    petId: photo.petId,
+    userId: user.userId,
+    photoId: photo.id,
+    provider: "meshy",
+    providerTaskId: null,
+    status: "waiting_for_provider_key",
+    modelR2Key: null,
+    error: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await db.insert(twinJobs).values(row);
+  // Without a key the job waits; it is submitted on the first poll after the key is added.
+  if (!meshyConfigured()) return Response.json({ job: serializeTwinJob(row, 0) }, { status: 202 });
   try {
-    const imageUrl = arrayBufferToDataUrl(await object.arrayBuffer(), photo.contentType);
-    const task = await createImageTo3DTask(env.MESHY_API_KEY, imageUrl);
-    const providerTaskId = String(task.result ?? task.id ?? "");
-    await db.insert(twinJobs).values({
-      id: jobId,
-      petId: photo.petId,
-      userId: user.userId,
-      photoId: body.photoId,
-      providerTaskId,
-      status: "submitted",
-      createdAt: now,
-      updatedAt: now,
-    });
-    return Response.json({ job: { id: jobId, status: "submitted", providerTaskId } }, { status: 202 });
+    const job = await submitTwinJob(row);
+    const status = job.status === "failed" ? 502 : 202;
+    return Response.json({ job: serializeTwinJob(job, 0), ...(job.error ? { error: job.error } : {}) }, { status });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Meshy request failed";
-    await db.insert(twinJobs).values({
-      id: jobId,
-      petId: photo.petId,
-      userId: user.userId,
-      photoId: body.photoId,
-      status: "failed",
-      error: message.slice(0, 500),
-      createdAt: now,
-      updatedAt: now,
-    });
-    return Response.json({ error: message, job: { id: jobId, status: "failed" } }, { status: 502 });
+    return Response.json({ error: message, job: serializeTwinJob(row, 0) }, { status: 503 });
   }
 }

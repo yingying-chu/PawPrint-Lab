@@ -33,7 +33,17 @@ export async function cleanupExpiredPhotos(userId?: string) {
   return expired.length;
 }
 
+const safe = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+/** Server pet id: the client's pet profile id, namespaced by user. */
+export function recordPetId(userId: string, petKey: string) {
+  return `${safe(userId)}--${petKey}`;
+}
+
 export function privatePhotoKey(userId: string, petId: string, photoId: string) {
-  const safe = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "_");
   return `users/${safe(userId)}/pets/${safe(petId)}/photos/${photoId}`;
+}
+
+export function privateAssetKey(userId: string, petId: string, folder: "assets" | "models", file: string) {
+  return `users/${safe(userId)}/pets/${safe(petId)}/${folder}/${file}`;
 }

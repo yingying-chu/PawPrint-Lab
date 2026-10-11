@@ -15,6 +15,13 @@
       "when": 1791750140974,
       "tag": "0001_arcade_designs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791750900034,
+      "tag": "0002_pet_assets",
+      "breakpoints": true
     }
   ]
 }

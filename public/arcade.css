@@ -184,3 +184,205 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Meshy: pattern/sticker switch, sticker preview and pack, and the 3D twin. */
+
+.design-mode {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.design-mode button {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.design-mode button small {
+  display: block;
+  font-size: 8px;
+  font-weight: 500;
+  margin-top: 3px;
+  opacity: 0.7;
+}
+.design-mode button.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.sticker-preview {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  z-index: 1;
+  /* A white keyline reads as a die-cut edge. */
+  filter: drop-shadow(0 0 0 #fff) drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
+    drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff) drop-shadow(0 6px 10px rgba(32, 44, 53, 0.22));
+}
+.portrait-canvas:not(.sticker-mode) .sticker-preview,
+.portrait-canvas.sticker-mode .arcade-pattern {
+  display: none;
+}
+.portrait-canvas.sticker-mode.has-sticker .portrait-dog,
+.portrait-canvas.sticker-mode.has-sticker .spark,
+.portrait-canvas.sticker-mode .brand-output-tabs {
+  visibility: hidden;
+}
+.portrait-canvas.sticker-mode .portrait-dog,
+.portrait-canvas.sticker-mode .spark {
+  visibility: visible;
+}
+.pattern-reference {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 8px 10px;
+  border: 1px dashed var(--ink);
+  font-size: 11px;
+}
+.pattern-reference[hidden] {
+  display: none;
+}
+.pattern-reference img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+.pattern-reference span {
+  flex: 1;
+}
+.pattern-reference button {
+  border: 0;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.provider-note {
+  font-size: 9px;
+  color: #66706c;
+  margin: 8px 0 0;
+}
+
+.sticker-pack.workspace-view {
+  min-height: 0;
+  padding-top: 0;
+}
+.sticker-pack.empty {
+  display: none;
+}
+.sticker-pack-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+.sticker-pack-head h3 {
+  font: 500 clamp(28px, 3vw, 40px) / 1 var(--serif);
+  letter-spacing: -0.03em;
+  margin: 8px 0 0;
+}
+.sticker-pack-head p {
+  max-width: 380px;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.sticker-card {
+  margin: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.sticker-art {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: repeating-conic-gradient(#f3ede2 0 25%, #fbf8f2 0 50%) 0 0 / 18px 18px;
+  font: 500 32px var(--serif);
+  color: #a84428;
+}
+.sticker-art img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff)
+    drop-shadow(0 -2px 0 #fff) drop-shadow(0 4px 6px rgba(32, 44, 53, 0.2));
+}
+.sticker-card figcaption {
+  padding: 10px 12px 12px;
+  font-size: 11px;
+}
+.sticker-card figcaption b,
+.sticker-card figcaption small {
+  display: block;
+}
+.sticker-card figcaption small {
+  color: #66706c;
+  margin-top: 3px;
+}
+.sticker-card figcaption span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+.sticker-card figcaption a,
+.sticker-card figcaption button {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.sticker-card.failed figcaption small {
+  color: #a84428;
+}
+
+.twin-model {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+.twin-model[hidden] {
+  display: none;
+}
+.twin-model model-viewer {
+  width: 100%;
+  height: 100%;
+  --poster-color: transparent;
+}
+.twin-card.has-3d-model #petModel,
+.twin-card.has-3d-model .measure-line,
+.twin-card.has-3d-model .rotate-control {
+  display: none;
+}
+.twin-model-error {
+  margin: 0;
+  padding: 24px;
+  font-size: 11px;
+  color: #a84428;
+}
+
+@media (max-width: 900px) {
+  .sticker-pack-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

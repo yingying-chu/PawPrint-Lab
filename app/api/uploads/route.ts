@@ -6,6 +6,7 @@ import {
   cleanupExpiredPhotos,
   deletionDate,
   privatePhotoKey,
+  recordPetId as toRecordPetId,
   retentionDays,
 } from "@/lib/photo-storage";
 
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
   const now = new Date().toISOString();
   const photoId = crypto.randomUUID();
   const deleteAfter = deletionDate();
-  const recordPetId = `${user.userId.replace(/[^a-zA-Z0-9_-]/g, "_")}--${petId}`;
+  const recordPetId = toRecordPetId(user.userId, petId);
   const r2Key = privatePhotoKey(user.userId, recordPetId, photoId);
 
   await db.insert(pets).values({

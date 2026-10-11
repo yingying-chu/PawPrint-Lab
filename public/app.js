@@ -222,6 +222,7 @@ function renderPetSwitcher() {
       syncPetUI();
       showArcadeDesign(null);
       loadArcadeDesigns();
+      loadPetMedia();
       toast(`Now designing for ${petName(p)}`);
     });
     wrap.insertBefore(b, $("#addPet"));
@@ -260,6 +261,7 @@ $("#petForm").addEventListener("submit", (e) => {
   syncPetUI();
   showArcadeDesign(null);
   loadArcadeDesigns();
+  loadPetMedia();
   toast(`${name} has a new profile`);
 });
 $("#petName").addEventListener("input", (e) => {
@@ -579,9 +581,11 @@ $("#createTwin").addEventListener("click", async (e) => {
   btn.disabled = false;
   btn.innerHTML = "Prototype twin prepared <span>✓</span>";
   $("#pipelineState").hidden = false;
-  if (jobStatus === "submitted")
+  if (jobStatus === "submitted") {
     $("#pipelineDetail").textContent =
-      "Meshy job submitted securely. The next backend step will poll for the GLB and save it to private storage.";
+      "Meshy is building the 3D model. This usually takes a few minutes.";
+    pollTwin(pet, pet.twinJob.id);
+  }
   else if (jobStatus === "waiting_for_provider_key")
     $("#pipelineDetail").textContent =
       "Private request saved · waiting for the Meshy API key before 3D generation starts.";
@@ -678,6 +682,7 @@ async function saveLocalPreviewDesign(btn, reason) {
 $("#generatePattern").addEventListener("click", async (e) => {
   const pet = activePet(),
     btn = e.currentTarget;
+  if (state.designMode === "sticker") return generateSticker(btn);
   if (!pet.twinReady) {
     toast("Create the pet twin first so the design keeps their likeness");
     location.hash = "#/studio";
@@ -708,6 +713,7 @@ $("#generatePattern").addEventListener("click", async (e) => {
         style: $(".style.active")?.dataset.style || "storybook",
         colors: selectedColors(),
         photoId: usePhoto ? photo.id : undefined,
+        characterId: state.patternCharacterId || undefined,
       },
     });
     pet.arcadeDesigns = [design, ...(pet.arcadeDesigns || [])];
@@ -732,7 +738,7 @@ $("#generatePattern").addEventListener("click", async (e) => {
     }
   } finally {
     btn.disabled = false;
-    btn.innerHTML = "Generate with Arcade <span>✦</span>";
+    btn.innerHTML = generateLabel();
   }
 });
 $("#applyBrand").addEventListener("click", () => {
@@ -1060,6 +1066,255 @@ async function checkoutArcadeProduct(btn) {
   }
 }
 
+// ---- Meshy: character stickers (2D) and the 3D twin ----
+state.designMode = "pattern";
+state.patternCharacterId = null;
+const generateLabel = () =>
+  state.designMode === "sticker"
+    ? "Generate sticker with Meshy <span>✦</span>"
+    : "Generate with Arcade <span>✦</span>";
+function setDesignMode(mode) {
+  state.designMode = mode;
+  $$("[data-design-mode]").forEach((btn) => {
+    const active = btn.dataset.designMode === mode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+  const sticker = mode === "sticker";
+  $("#generatePattern").innerHTML = generateLabel();
+  $$(".ref-provider").forEach((el) => (el.textContent = sticker ? "Meshy" : "Arcade"));
+  $$(".ref-output").forEach((el) => (el.textContent = sticker ? "sticker" : "pattern"));
+  $("#designNote").textContent = sticker
+    ? "Meshy draws a transparent sticker in about a minute. Stickers collect in the pack below."
+    : "Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.";
+  $("#applyBrand").hidden = sticker;
+  $("#portraitCanvas").classList.toggle("sticker-mode", sticker);
+  renderPatternReference();
+  setArcadeStatus("");
+}
+$$("[data-design-mode]").forEach((btn) =>
+  btn.addEventListener("click", () => setDesignMode(btn.dataset.designMode)),
+);
+function renderPatternReference() {
+  const chip = $("#patternReference"),
+    character = (activePet().characters || []).find((c) => c.id === state.patternCharacterId);
+  if (!character) state.patternCharacterId = null;
+  chip.hidden = state.designMode !== "pattern" || !character;
+  if (character) {
+    $("img", chip).src = character.imageUrl;
+    $("b", chip).textContent = character.name;
+  }
+}
+$("#patternReference button").addEventListener("click", () => {
+  state.patternCharacterId = null;
+  renderPatternReference();
+});
+function showSticker(character) {
+  const img = $("#stickerPreview");
+  img.hidden = !character?.imageUrl;
+  if (character?.imageUrl) {
+    img.src = character.imageUrl;
+    img.alt = `${character.name}: sticker of ${petName(activePet())}`;
+  }
+  $("#portraitCanvas").classList.toggle("has-sticker", Boolean(character?.imageUrl));
+}
+function renderStickerPack() {
+  const characters = activePet().characters || [];
+  $("#stickerPack").classList.toggle("empty", !characters.length);
+  $("#stickerGrid").innerHTML = characters
+    .map((c) => {
+      if (c.status === "running")
+        return `<figure class="sticker-card pending"><div class="sticker-art"><span class="arcade-spinner"></span></div><figcaption><b>${escapeHtml(c.name)}</b><small>Meshy is drawing…</small></figcaption></figure>`;
+      if (c.status === "failed")
+        return `<figure class="sticker-card failed"><div class="sticker-art">!</div><figcaption><b>${escapeHtml(c.name)}</b><small>${escapeHtml(c.error || "Couldn't be drawn")}</small></figcaption></figure>`;
+      return `<figure class="sticker-card"><div class="sticker-art"><img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.name)}"></div><figcaption><b>${escapeHtml(c.name)}</b><span><a href="${escapeHtml(c.imageUrl)}?download=1">Download PNG</a><button type="button" data-use-sticker="${escapeHtml(c.id)}">Use in a pattern</button></span></figcaption></figure>`;
+    })
+    .join("");
+  $$("[data-use-sticker]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.patternCharacterId = btn.dataset.useSticker;
+      setDesignMode("pattern");
+      $("#portraitCanvas").scrollIntoView({ behavior: "smooth", block: "start" });
+      toast("The next Arcade pattern will be guided by this sticker");
+    }),
+  );
+}
+async function generateSticker(btn) {
+  const pet = activePet(),
+    photo = storedPhoto(pet),
+    usePhoto = Boolean(photo && $("#usePhotoReference").checked);
+  btn.disabled = true;
+  btn.innerHTML = "Sending to Meshy… <span>✦</span>";
+  setArcadeStatus(usePhoto ? "Sharing the reference photo and starting the sticker…" : "Starting the sticker…");
+  try {
+    const { character } = await api("/api/characters", {
+      method: "POST",
+      body: {
+        petKey: pet.id,
+        petName: petName(pet),
+        petType: pet.type,
+        prompt: $("#patternPrompt").value.trim(),
+        style: $(".style.active")?.dataset.style || "storybook",
+        colors: selectedColors(),
+        photoId: usePhoto ? photo.id : undefined,
+      },
+    });
+    pet.characters = [character, ...(pet.characters || [])];
+    renderStickerPack();
+    await pollCharacter(pet, character.id);
+  } catch (error) {
+    if (error.status === 401)
+      setArcadeStatus(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to generate stickers.`, "error");
+    else if (error.code === "MESHY_NOT_CONFIGURED")
+      setArcadeStatus("Meshy isn't connected on this site yet.", "warn");
+    else if (error.status === 429 && error.payload?.characterId) {
+      setArcadeStatus("A sticker is still being drawn — waiting for it.");
+      await pollCharacter(pet, error.payload.characterId);
+    } else setArcadeStatus(escapeHtml(error.message), "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = generateLabel();
+  }
+}
+async function pollCharacter(pet, characterId) {
+  if (polling.has(characterId)) return;
+  polling.add(characterId);
+  const started = Date.now();
+  try {
+    while (Date.now() - started < 5 * 60 * 1000) {
+      const seconds = Math.round((Date.now() - started) / 1000);
+      if (pet === activePet() && state.designMode === "sticker")
+        setArcadeStatus(`<span class="arcade-spinner"></span>Meshy is drawing the sticker · ${seconds}s`);
+      await sleep(4000);
+      let character;
+      try {
+        ({ character } = await api(`/api/characters/${encodeURIComponent(characterId)}`));
+      } catch (error) {
+        if (error.status >= 500 || error.status === 429) continue;
+        throw error;
+      }
+      pet.characters = (pet.characters || []).map((c) => (c.id === character.id ? character : c));
+      if (character.status === "running") continue;
+      if (pet === activePet()) {
+        renderStickerPack();
+        if (character.status === "succeeded") {
+          showSticker(character);
+          setArcadeStatus(`${escapeHtml(character.name)} is ready in the sticker pack below.`, "ok");
+          toast(`${character.name} is ready`);
+        } else setArcadeStatus(escapeHtml(character.error || "Meshy couldn't draw this sticker."), "error");
+      }
+      return;
+    }
+  } catch (error) {
+    if (pet === activePet()) setArcadeStatus(escapeHtml(error.message), "error");
+  } finally {
+    polling.delete(characterId);
+  }
+}
+
+// 3D twin: show Meshy's GLB with <model-viewer>, loaded only when a model exists.
+let modelViewerLoading = null;
+function loadModelViewer() {
+  modelViewerLoading ||= new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = "https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js";
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.append(script);
+  });
+  return modelViewerLoading;
+}
+function showTwinModel(pet) {
+  const ready = pet.twinJob?.status === "ready" && pet.twinJob.modelUrl;
+  const slot = $("#twinModel");
+  $(".twin-card").classList.toggle("has-3d-model", Boolean(ready));
+  slot.hidden = !ready;
+  if (!ready) {
+    slot.innerHTML = "";
+    delete slot.dataset.src;
+    return;
+  }
+  if (slot.dataset.src !== pet.twinJob.modelUrl) {
+    slot.dataset.src = pet.twinJob.modelUrl;
+    slot.innerHTML = `<model-viewer src="${escapeHtml(pet.twinJob.modelUrl)}" alt="3D model of ${escapeHtml(petName(pet))}" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y"></model-viewer>`;
+  }
+  loadModelViewer().catch(() => {
+    slot.innerHTML = '<p class="twin-model-error">The 3D viewer couldn\'t load. Check your connection and refresh.</p>';
+  });
+  $("#twinStatus").textContent = pet.measurements.confirmed
+    ? "3D twin · measurements confirmed"
+    : "3D twin · photo estimate";
+  $("#twinStatus").classList.remove("pending");
+  $("#pipelineState").hidden = false;
+  $("#pipelineDetail").textContent = "3D model ready · drag to rotate. Saved privately to your account.";
+}
+async function pollTwin(pet, jobId) {
+  if (polling.has(jobId)) return;
+  polling.add(jobId);
+  const started = Date.now();
+  try {
+    while (Date.now() - started < 15 * 60 * 1000) {
+      await sleep(5000);
+      let job;
+      try {
+        ({ job } = await api(`/api/twin-jobs/${encodeURIComponent(jobId)}`));
+      } catch (error) {
+        if (error.status >= 500 || error.status === 429) continue;
+        throw error;
+      }
+      pet.twinJob = job;
+      if (job.status === "submitted") {
+        if (pet === activePet()) {
+          $("#twinStatus").textContent = `Building 3D model · ${job.progress}%`;
+          $("#pipelineDetail").textContent = `Meshy is building the 3D model · ${job.progress}% done.`;
+        }
+        continue;
+      }
+      if (pet === activePet()) {
+        if (job.status === "ready") {
+          showTwinModel(pet);
+          toast(`${petName(pet)}'s 3D twin is ready`);
+        } else if (job.status === "failed") {
+          $("#twinStatus").textContent = "3D model needs attention";
+          $("#twinError").textContent = job.error || "Meshy couldn't build the 3D model.";
+        }
+      }
+      return;
+    }
+  } catch (error) {
+    if (pet === activePet()) $("#twinError").textContent = error.message;
+  } finally {
+    polling.delete(jobId);
+  }
+}
+async function loadPetMedia() {
+  const pet = activePet();
+  showSticker(null);
+  showTwinModel(pet);
+  renderStickerPack();
+  try {
+    const [{ characters }, { job }] = await Promise.all([
+      api(`/api/characters?petKey=${encodeURIComponent(pet.id)}`),
+      api(`/api/twin-jobs?petKey=${encodeURIComponent(pet.id)}`),
+    ]);
+    pet.characters = characters;
+    if (job) {
+      pet.twinJob = job;
+      if (job.status === "ready" || job.status === "submitted") pet.twinReady = true;
+    }
+    if (pet !== activePet()) return;
+    renderStickerPack();
+    renderPatternReference();
+    showTwinModel(pet);
+    characters.filter((c) => c.status === "running").forEach((c) => pollCharacter(pet, c.id));
+    if (job?.status === "submitted") pollTwin(pet, job.id);
+  } catch {
+    // Signed out or offline: stickers and the 3D twin stay hidden.
+  }
+}
+
 syncPetUI();
 renderRoute();
 loadArcadeDesigns();
+loadPetMedia();

@@ -1,6 +1,6 @@
 # Pawprint Atelier: 3D MVP integration
 
-The current published experience prepares and demonstrates a visual-twin job. It does not send private pet photos to a third-party 3D provider yet.
+When `MESHY_API_KEY` is set, creating a twin sends the owner's first saved photo to Meshy image-to-3D. `GET /api/twin-jobs/:id` polls the task and copies the finished GLB into private R2 storage, served from `/api/twin-jobs/:id/model`. Sticker generation (`/api/characters`) uses Meshy image-to-image only when the owner opts in to sharing the photo.
 
 ## Implemented foundation
 
@@ -11,7 +11,7 @@ The current published experience prepares and demonstrates a visual-twin job. It
 - Back, chest, and neck values stored in centimeters regardless of display unit
 - Explicit owner confirmation before labeling a profile measurement-calibrated
 - Honest prototype job state while no private provider is connected
-- Server-only Meshy client in `server/meshy-client.mjs`
+- Server-only Meshy client in `lib/meshy.ts` (image-to-3D, text/image-to-image)
 
 ## Required production services
 

@@ -91,6 +91,7 @@
           </div>
           <div class="profile-readiness"><div><span>Visual twin</span><b id="visualReadiness">Needs a photo</b></div><div><span>Fit profile</span><b id="fitReadiness">Photo estimate only</b></div></div>
           <button class="primary full" id="createTwin">Create prototype twin <span>→</span></button>
+          <p class="provider-note">Creating the 3D twin shares your first uploaded photo with Meshy to build the model.</p>
           <p class="inline-error" id="twinError" role="alert"></p>
           <div class="pipeline-state" id="pipelineState" hidden><span class="pipeline-dot"></span><div><b>Visual-twin job prepared</b><small id="pipelineDetail">Demo mode · connect a private 3D provider key to generate a GLB model.</small></div></div>
         </div>
@@ -100,6 +101,7 @@
             <div class="grid-floor"></div>
             <div class="measure-line vertical"><span>53 cm</span></div><div class="measure-line horizontal"><span>71 cm</span></div>
             <div class="dog model" id="petModel"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
+            <div class="twin-model" id="twinModel" hidden></div>
             <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
           </div>
           <div class="twin-bottom"><div><small>FIT PROFILE</small><strong id="fitProfile">Medium · long body</strong></div><button id="adjustFit">Adjust fit</button></div>
@@ -117,9 +119,11 @@
           <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
           <div class="portrait-name" id="portraitName">MILO</div>
           <img class="arcade-pattern" id="arcadePattern" alt="" hidden>
+          <img class="sticker-preview" id="stickerPreview" alt="" hidden>
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
+          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · for printed goods</small></button><button type="button" data-design-mode="sticker" aria-pressed="false">Character sticker<small>by Meshy · for sticker packs</small></button></div>
           <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
           <p class="control-label">Choose a design direction</p>
           <div class="style-picker" role="radiogroup">
@@ -129,15 +133,21 @@
           </div>
           <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <p class="palette-hint">Tap colors to include them in the pattern.</p>
-          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Milo</b>’s uploaded photo as a reference<small>This shares the photo with Arcade to guide the pattern.</small></span></label>
+          <p class="palette-hint">Tap colors to include them in the design.</p>
+          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Milo</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
+          <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this sticker as a reference">×</button></div>
           <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
           <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>
           <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
           <button class="secondary full apply-brand" id="applyBrand" disabled>Apply design to collection <span>→</span></button>
-          <p class="arcade-note">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
+          <p class="arcade-note" id="designNote">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
         </div>
       </div>
+    </section>
+
+    <section class="sticker-pack section workspace-view" id="stickerPack" data-route="designs" hidden>
+      <div class="sticker-pack-head"><div><p class="eyebrow">Sticker pack</p><h3><span class="name-copy">MILO</span>’s characters</h3></div><p>Each sticker is a transparent PNG drawn by Meshy. Download them for printing, or use one to guide an Arcade pattern.</p></div>
+      <div class="sticker-grid" id="stickerGrid"></div>
     </section>
 
     <section class="shop-router workspace-view" data-route="shop"><div><p class="eyebrow">Shop for both of you</p><h1>Choose who we’re making for.</h1></div><div class="shop-context-tabs" role="tablist" aria-label="Shop collection"><button class="active" data-shop-view="pet">For <span class="name-copy">Milo</span></button><button data-shop-view="owner">For me</button></div></section>
