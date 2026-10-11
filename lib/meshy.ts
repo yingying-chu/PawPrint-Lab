@@ -83,9 +83,12 @@ export async function createImageTo3DTask(imageUrl: string) {
     image_url: imageUrl,
     ai_model: "latest",
     model_type: "standard",
-    should_remesh: false,
+    // Default Meshy output can approach 100 MB; a remeshed ~30k-triangle model with a
+    // single base-colour texture is a few MB and plenty for an on-screen pet.
+    should_remesh: true,
+    target_polycount: 30000,
     should_texture: true,
-    enable_pbr: true,
+    enable_pbr: false,
     target_formats: ["glb"],
   });
 }
@@ -105,6 +108,28 @@ export async function downloadAsset(url: string) {
     bytes: await response.arrayBuffer(),
     contentType: response.headers.get("content-type") ?? "application/octet-stream",
   };
+}
+
+/**
+ * Streams a Meshy asset into R2 without holding it in memory; 3D models can be
+ * larger than a Worker's memory limit.
+ */
+export async function copyAssetToBucket(url: string, key: string, contentType: string) {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) {
+    throw new MeshyError(`Could not download the Meshy result (${response.status})`, response.status);
+  }
+  const length = Number(response.headers.get("content-length"));
+  if (!(length > 0)) {
+    await env.BUCKET!.put(key, await response.arrayBuffer(), { httpMetadata: { contentType } });
+    return;
+  }
+  // R2 only accepts a stream of known length; FixedLengthStream supplies it.
+  const { readable, writable } = new FixedLengthStream(length);
+  await Promise.all([
+    response.body.pipeTo(writable),
+    env.BUCKET!.put(key, readable, { httpMetadata: { contentType } }),
+  ]);
 }
 
 export function arrayBufferToDataUrl(buffer: ArrayBuffer, contentType: string) {

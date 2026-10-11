@@ -427,6 +427,8 @@ const fileToData = (file) =>
     r.readAsDataURL(file);
   });
 const DEMO_PHOTO_URL = "assets/whispurr-demo.jpg";
+// Made earlier by Meshy image-to-3D from the demo photo, then simplified for the web.
+const DEMO_TWIN_URL = "assets/whispurr-twin.glb";
 $("#useDemoPhoto").addEventListener("click", async () => {
   const pet = activePet();
   if (pet.photos.some((photo) => photo.demo)) return toast("The demo photo is already attached");
@@ -555,7 +557,11 @@ $("#createTwin").addEventListener("click", async (e) => {
     await new Promise((r) => setTimeout(r, 420));
   }
   let jobStatus = "local_preview";
-  if (savedPhoto) {
+  if (savedPhoto?.demo) {
+    // The demo photo already has a Meshy model, so demos don't spend credits.
+    pet.twinJob = { id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true };
+    jobStatus = "demo";
+  } else if (savedPhoto) {
     try {
       const response = await fetch("/api/twin-jobs", {
         method: "POST",
@@ -595,6 +601,8 @@ $("#createTwin").addEventListener("click", async (e) => {
     $("#pipelineDetail").textContent =
       "Meshy is building the 3D model. This usually takes a few minutes.";
     pollTwin(pet, pet.twinJob.id);
+  } else if (jobStatus === "demo") {
+    showTwinModel(pet);
   }
   else if (jobStatus === "waiting_for_provider_key")
     $("#pipelineDetail").textContent =
@@ -608,7 +616,9 @@ $("#createTwin").addEventListener("click", async (e) => {
   toast(
     jobStatus === "submitted"
       ? `${petName(pet)}'s 3D job was submitted`
-      : `${petName(pet)}'s prototype twin is prepared`,
+      : jobStatus === "demo"
+        ? `${petName(pet)}'s 3D twin is ready`
+        : `${petName(pet)}'s prototype twin is prepared`,
   );
 });
 $("#rotatePet").addEventListener("click", () =>
@@ -1243,7 +1253,9 @@ function showTwinModel(pet) {
     : "3D twin · photo estimate";
   $("#twinStatus").classList.remove("pending");
   $("#pipelineState").hidden = false;
-  $("#pipelineDetail").textContent = "3D model ready · drag to rotate. Saved privately to your account.";
+  $("#pipelineDetail").textContent = pet.twinJob.demo
+    ? "Demo model · made earlier with Meshy from this same photo · drag to rotate."
+    : "3D model ready · drag to rotate. Saved privately to your account.";
 }
 async function pollTwin(pet, jobId) {
   if (polling.has(jobId)) return;
@@ -1260,10 +1272,13 @@ async function pollTwin(pet, jobId) {
         throw error;
       }
       pet.twinJob = job;
-      if (job.status === "submitted") {
+      if (job.status === "submitted" || job.status === "saving") {
         if (pet === activePet()) {
-          $("#twinStatus").textContent = `Building 3D model · ${job.progress}%`;
-          $("#pipelineDetail").textContent = `Meshy is building the 3D model · ${job.progress}% done.`;
+          const saving = job.status === "saving";
+          $("#twinStatus").textContent = saving ? "Saving 3D model…" : `Building 3D model · ${job.progress}%`;
+          $("#pipelineDetail").textContent = saving
+            ? "Meshy finished. Copying the model into your private storage…"
+            : `Meshy is building the 3D model · ${job.progress}% done.`;
         }
         continue;
       }
@@ -1297,14 +1312,14 @@ async function loadPetMedia() {
     pet.characters = characters;
     if (job) {
       pet.twinJob = job;
-      if (job.status === "ready" || job.status === "submitted") pet.twinReady = true;
+      if (["ready", "submitted", "saving"].includes(job.status)) pet.twinReady = true;
     }
     if (pet !== activePet()) return;
     renderStickerPack();
     renderPatternReference();
     showTwinModel(pet);
     characters.filter((c) => c.status === "running").forEach((c) => pollCharacter(pet, c.id));
-    if (job?.status === "submitted") pollTwin(pet, job.id);
+    if (job?.status === "submitted" || job?.status === "saving") pollTwin(pet, job.id);
   } catch {
     // Signed out or offline: stickers and the 3D twin stay hidden.
   }

@@ -27,7 +27,9 @@ export function buildStickerPrompt(input: {
       ? `Turn the ${subject} in the reference photo into a cute die-cut sticker character, keeping its real markings, fur color and face.`
       : `A cute die-cut sticker character of a ${subject} named ${input.petName}.`,
     `Style: ${STICKER_STYLES[input.style] ?? STICKER_STYLES.storybook}.`,
-    "Full body, centered, thick clean outline, no text, no background scene.",
+    "Full body, centered, thick clean outline, no background scene.",
+    // Photos often show branded harnesses or collars; keep trademarks off printable art.
+    "No text, letters, logos or brand names anywhere, including on harnesses or collars.",
     input.colors.length ? `Use this palette: ${input.colors.join(", ")}.` : "",
     input.prompt,
   ].filter(Boolean).join(" ");

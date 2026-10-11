@@ -1,12 +1,12 @@
 import { env } from "cloudflare:workers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petPhotos, twinJobs } from "@/db/schema";
 import {
   MeshyError,
   arrayBufferToDataUrl,
+  copyAssetToBucket,
   createImageTo3DTask,
-  downloadAsset,
   getImageTo3DTask,
   meshyConfigured,
   taskErrorMessage,
@@ -14,6 +14,8 @@ import {
 import { privateAssetKey } from "@/lib/photo-storage";
 
 type TwinJob = typeof twinJobs.$inferSelect;
+
+const SAVE_TIMEOUT_MS = 5 * 60 * 1000;
 
 async function update(row: TwinJob, changes: Partial<TwinJob>): Promise<TwinJob> {
   const updated = { ...changes, updatedAt: new Date().toISOString() };
@@ -44,6 +46,12 @@ export async function refreshTwinJob(row: TwinJob): Promise<{ job: TwinJob; prog
   if (row.status === "waiting_for_provider_key" && meshyConfigured()) {
     return { job: await submitTwinJob(row), progress: 0 };
   }
+  if (row.status === "saving") {
+    // Another request is copying the model; reclaim it only if that copy stalled.
+    const stalled = Date.now() - Date.parse(row.updatedAt) > SAVE_TIMEOUT_MS;
+    if (!stalled) return { job: row, progress: 100 };
+    row = await update(row, { status: "submitted" });
+  }
   if (row.status !== "submitted" || !row.providerTaskId) {
     return { job: row, progress: row.status === "ready" ? 100 : 0 };
   }
@@ -52,9 +60,19 @@ export async function refreshTwinJob(row: TwinJob): Promise<{ job: TwinJob; prog
     if (task.status === "SUCCEEDED") {
       const glbUrl = task.model_urls?.glb;
       if (!glbUrl) return { job: await update(row, { status: "failed", error: "Meshy returned no GLB model." }), progress: 100 };
-      const { bytes } = await downloadAsset(glbUrl);
+      // Claim the copy so overlapping polls don't each download the model.
+      const claimed = await getDb().update(twinJobs)
+        .set({ status: "saving", updatedAt: new Date().toISOString() })
+        .where(and(eq(twinJobs.id, row.id), eq(twinJobs.status, "submitted")))
+        .returning({ id: twinJobs.id });
+      if (!claimed.length) return { job: { ...row, status: "saving" }, progress: 100 };
       const modelR2Key = privateAssetKey(row.userId, row.petId, "models", `${row.id}.glb`);
-      await env.BUCKET!.put(modelR2Key, bytes, { httpMetadata: { contentType: "model/gltf-binary" } });
+      try {
+        await copyAssetToBucket(glbUrl, modelR2Key, "model/gltf-binary");
+      } catch (error) {
+        await update(row, { status: "submitted" });
+        throw error;
+      }
       return { job: await update(row, { status: "ready", modelR2Key, error: null }), progress: 100 };
     }
     if (task.status === "FAILED" || task.status === "CANCELED") {
