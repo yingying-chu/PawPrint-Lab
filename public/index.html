@@ -14,12 +14,14 @@
   <link rel="stylesheet" href="upload-fix.css" />
   <link rel="stylesheet" href="flow.css" />
   <link rel="stylesheet" href="arcade.css" />
+  <link rel="stylesheet" href="pet-variants.css" />
+  <link rel="stylesheet" href="cubby.css" />
   <style>body:not([data-route]) [data-route]:not([data-route="landing"]){display:none}</style>
 </head>
 <body>
   <header class="nav">
     <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav class="workspace-tabs" aria-label="Main workspace" role="tablist"><a id="tab-landing" role="tab" aria-selected="true" data-nav-route="landing" href="#/">Home</a><a id="tab-studio" role="tab" aria-selected="false" data-nav-route="studio" href="#/studio">Pets</a><a id="tab-designs" role="tab" aria-selected="false" data-nav-route="designs" href="#/designs">Designs</a><a id="tab-shop" role="tab" aria-selected="false" data-nav-route="shop" href="#/shop">Shop</a><a id="tab-home" role="tab" aria-selected="false" data-nav-route="home" href="#/home">Pet space</a></nav>
+    <nav class="workspace-tabs" aria-label="Main workspace" role="tablist"><a id="tab-landing" role="tab" aria-selected="true" data-nav-route="landing" href="#/">Home</a><a id="tab-studio" role="tab" aria-selected="false" data-nav-route="studio" href="#/studio">Pets</a><a id="tab-designs" role="tab" aria-selected="false" data-nav-route="designs" href="#/designs">Designs</a><a id="tab-shop" role="tab" aria-selected="false" data-nav-route="shop" href="#/shop">Shop</a><a id="tab-home" role="tab" aria-selected="false" data-nav-route="home" href="#/cubby">Cubby</a></nav>
     <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
   </header>
 
@@ -34,10 +36,10 @@
       </div>
       <div class="hero-scene" aria-label="Illustration of a dog in a personalized room">
         <div class="sun"></div><div class="window"><i></i><i></i></div>
-        <div class="shelf"><span class="vase">✿</span><span class="frame">MILO</span></div>
-        <div class="dog large"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
-        <div class="bed"><span>MILO’S SPOT</span></div>
-        <div class="bowl">MILO</div>
+        <div class="shelf"><span class="vase">✿</span><span class="frame name-copy">WHISPURR</span></div>
+        <div class="dog large"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
+        <div class="bed"><span><span class="name-copy">WHISPURR</span>’S SPOT</span></div>
+        <div class="bowl name-copy">WHISPURR</div>
         <p class="scene-note"><b>Designed together.</b><br>Made to their measurements.</p>
       </div>
     </section>
@@ -54,11 +56,11 @@
       <div class="pet-setup-panel">
         <div class="pet-basics-heading"><span>1</span><div><b>Pet basics</b><small>Name and type come first. You can switch profiles below at any time.</small></div></div>
         <div class="form-row pet-basics-form">
-          <label>Pet’s name<input id="petName" value="Milo" maxlength="12" /></label>
-          <label>Pet type<select id="petType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+          <label>Pet’s name<input id="petName" value="Whispurr" maxlength="12" /></label>
+          <label>Pet type<select id="petType"><option>Dog</option><option selected>Cat</option><option>Rabbit</option><option>Other</option></select></label>
         </div>
         <div class="pet-profiles-row"><span class="pet-profiles-label">Your pet profiles</span><div class="pet-switcher" id="petSwitcher">
-          <button class="pet-chip active" data-pet-id="milo"><span class="pet-avatar">M</span><span><b>Milo</b><small>Active profile</small></span></button>
+          <button class="pet-chip active" data-pet-id="whispurr"><span class="pet-avatar">W</span><span><b>Whispurr</b><small>Active profile</small></span></button>
           <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
         </div></div>
       </div>
@@ -66,9 +68,9 @@
       <div class="studio-grid">
         <div class="capture-card">
           <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
-          <div class="demo-photo-option" id="demoPhotoOption"><img src="assets/demo-pet-reference.jpg" alt="Demo reference photo of a fluffy golden cat"><div><small>Demo reference</small><b>Try the capture flow with this photo</b><span>Good face detail · body partially visible · no scale reference</span></div><button type="button" id="useDemoPhoto">Use demo photo</button></div>
+          <div class="demo-photo-option" id="demoPhotoOption"><img src="assets/whispurr-demo.jpg" alt="Whispurr, a fluffy cream Persian cat in a harness, sitting on a bench"><div><small>Demo photo</small><b>Try it with Whispurr</b><span>Full body and face visible · no tape measurements yet</span></div><button type="button" id="useDemoPhoto">Use demo photo</button></div>
           <div class="photo-chat" id="photoChat">
-            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! <b>One clear photo is enough</b> to start <b class="chat-pet-name">Milo</b>’s profile. A standing full-body photo works best. Add other angles only if you’d like more detail.</p></div>
+            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! <b>One clear photo is enough</b> to start <b class="chat-pet-name">Whispurr</b>’s profile. A standing full-body photo works best. Add other angles only if you’d like more detail.</p></div>
             <div class="shot-guide"><span><i>1</i>Best first photo</span><span class="optional"><i>＋</i>Face · optional</span><span class="optional"><i>＋</i>Side · optional</span><span class="optional"><i>＋</i>Detail · optional</span></div>
             <div class="photo-tray" id="photoTray"></div>
             <div class="chat-status" id="chatStatus">No photos attached yet</div>
@@ -100,7 +102,7 @@
           <div class="twin-view">
             <div class="grid-floor"></div>
             <div class="measure-line vertical"><span>53 cm</span></div><div class="measure-line horizontal"><span>71 cm</span></div>
-            <div class="dog model" id="petModel"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
+            <div class="dog model" id="petModel"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
             <div class="twin-model" id="twinModel" hidden></div>
             <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
           </div>
@@ -117,7 +119,7 @@
         <div class="portrait-canvas" id="portraitCanvas">
           <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
           <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
-          <div class="portrait-name" id="portraitName">MILO</div>
+          <div class="portrait-name" id="portraitName">WHISPURR</div>
           <img class="arcade-pattern" id="arcadePattern" alt="" hidden>
           <img class="sticker-preview" id="stickerPreview" alt="" hidden>
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
@@ -131,10 +133,10 @@
             <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
             <button class="style" data-style="minimal"><span>◯</span>Minimal line</button>
           </div>
-          <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
+          <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Whispurr, warm clay and butter yellow.</textarea></label>
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
           <p class="palette-hint">Tap colors to include them in the design.</p>
-          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Milo</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
+          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
           <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this sticker as a reference">×</button></div>
           <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
           <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>
@@ -146,21 +148,21 @@
     </section>
 
     <section class="sticker-pack section workspace-view" id="stickerPack" data-route="designs" hidden>
-      <div class="sticker-pack-head"><div><p class="eyebrow">Sticker pack</p><h3><span class="name-copy">MILO</span>’s characters</h3></div><p>Each sticker is a transparent PNG drawn by Meshy. Download them for printing, or use one to guide an Arcade pattern.</p></div>
+      <div class="sticker-pack-head"><div><p class="eyebrow">Sticker pack</p><h3><span class="name-copy">WHISPURR</span>’s characters</h3></div><p>Each sticker is a transparent PNG drawn by Meshy. Download them for printing, or use one to guide an Arcade pattern.</p></div>
       <div class="sticker-grid" id="stickerGrid"></div>
     </section>
 
-    <section class="shop-router workspace-view" data-route="shop"><div><p class="eyebrow">Shop for both of you</p><h1>Choose who we’re making for.</h1></div><div class="shop-context-tabs" role="tablist" aria-label="Shop collection"><button class="active" data-shop-view="pet">For <span class="name-copy">Milo</span></button><button data-shop-view="owner">For me</button></div></section>
+    <section class="shop-router workspace-view" data-route="shop"><div><p class="eyebrow">Shop for both of you</p><h1>Choose who we’re making for.</h1></div><div class="shop-context-tabs" role="tablist" aria-label="Shop collection"><button class="active" data-shop-view="pet">For <span class="name-copy">Whispurr</span></button><button data-shop-view="owner">For me</button></div></section>
 
     <section class="collection section workspace-view" id="collection" data-route="shop" data-shop-panel="pet">
-      <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Milo</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
+      <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Whispurr</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
       <div class="product-grid">
-        <article class="product featured" data-category="rest" data-product="Cloud Bed" data-slug="cloud-bed"><a class="product-link" href="product.html?product=cloud-bed"><div class="product-art bed-art"><div class="mini-bed branded-surface"><span class="name-copy">MILO</span></div><span class="fit-badge">Best fit</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="wear" data-product="Ribbon Scarf" data-slug="ribbon-scarf"><a class="product-link" href="product.html?product=ribbon-scarf"><div class="product-art scarf-art"><div class="scarf-shape branded-surface">M</div><span class="maker-badge">Arcade-ready surface</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="walk" data-product="Everyday Harness" data-slug="everyday-harness"><a class="product-link" href="product.html?product=everyday-harness"><div class="product-art harness-art"><div class="harness-shape branded-surface"><i></i><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product featured" data-category="rest" data-product="Cloud Bed" data-slug="cloud-bed"><a class="product-link" href="product.html?product=cloud-bed"><div class="product-art bed-art"><div class="mini-bed branded-surface"><span class="name-copy">WHISPURR</span></div><span class="fit-badge">Best fit</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="wear" data-product="Ribbon Scarf" data-slug="ribbon-scarf"><a class="product-link" href="product.html?product=ribbon-scarf"><div class="product-art scarf-art"><div class="scarf-shape branded-surface">W</div><span class="maker-badge">Arcade-ready surface</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="walk" data-product="Everyday Harness" data-slug="everyday-harness"><a class="product-link" href="product.html?product=everyday-harness"><div class="product-art harness-art"><div class="harness-shape branded-surface"><i></i><span class="name-copy">WHISPURR</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">WHISPURR</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
       </div>
-      <div class="arcade-shop" data-audience="pet"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Real pieces in <span class="name-copy">MILO</span>’s pattern</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
+      <div class="arcade-shop" data-audience="pet"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Real pieces in <span class="name-copy">WHISPURR</span>’s pattern</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
     </section>
 
@@ -170,23 +172,31 @@
         <div class="owner-intro-copy"><p>The same portrait mark, name, and pattern—made for the human side of the family. Keep it subtle, make it joyful, or cover the whole thing in their face.</p><div class="owner-mode"><button class="active" data-owner-mode="subtle">Quiet nod</button><button data-owner-mode="portrait">Portrait</button><button data-owner-mode="pattern">Full pattern</button></div></div>
       </div>
       <div class="owner-product-grid">
-        <article class="product owner-product" data-product="Everyday Water Bottle" data-slug="water-bottle"><a class="product-link" href="product.html?product=water-bottle"><div class="owner-product-art bottle-art"><div class="bottle branded-surface"><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="maker-badge">Owner favorite</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Water Bottle</strong><small>Stainless steel · 24 oz</small></span><b>$38</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Pet Personality Stickers" data-slug="sticker-pack"><a class="product-link" href="product.html?product=sticker-pack"><div class="owner-product-art sticker-art"><div class="sticker-sheet branded-surface"><span class="sticker face owner-mark">M</span><span class="sticker name name-copy">MILO</span><span class="sticker heart">♥</span><span class="sticker phrase">GOOD<br>ONE</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pet Personality Stickers</strong><small>Weatherproof · 8-piece sheet</small></span><b>$14</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Portrait Market Tote" data-slug="market-tote"><a class="product-link" href="product.html?product=market-tote"><div class="owner-product-art tote-art"><div class="tote branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="maker-badge arcade-badge">Pattern-ready</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Market Tote</strong><small>Heavy canvas · printed or embroidered</small></span><b>$46</b></div></a><button class="customize-product">Customize</button></article>
-        <article class="product owner-product" data-product="Pocket Portrait Case" data-slug="phone-case"><a class="product-link" href="product.html?product=phone-case"><div class="owner-product-art case-art"><div class="phone-case branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pocket Portrait Case</strong><small>Protective shell · matte finish</small></span><b>$34</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Everyday Water Bottle" data-slug="water-bottle"><a class="product-link" href="product.html?product=water-bottle"><div class="owner-product-art bottle-art"><div class="bottle branded-surface"><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="maker-badge">Owner favorite</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Water Bottle</strong><small>Stainless steel · 24 oz</small></span><b>$38</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Pet Personality Stickers" data-slug="sticker-pack"><a class="product-link" href="product.html?product=sticker-pack"><div class="owner-product-art sticker-art"><div class="sticker-sheet branded-surface"><span class="sticker face owner-mark">W</span><span class="sticker name name-copy">WHISPURR</span><span class="sticker heart">♥</span><span class="sticker phrase">GOOD<br>ONE</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pet Personality Stickers</strong><small>Weatherproof · 8-piece sheet</small></span><b>$14</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Portrait Market Tote" data-slug="market-tote"><a class="product-link" href="product.html?product=market-tote"><div class="owner-product-art tote-art"><div class="tote branded-surface"><i></i><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="maker-badge arcade-badge">Pattern-ready</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Market Tote</strong><small>Heavy canvas · printed or embroidered</small></span><b>$46</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product owner-product" data-product="Pocket Portrait Case" data-slug="phone-case"><a class="product-link" href="product.html?product=phone-case"><div class="owner-product-art case-art"><div class="phone-case branded-surface"><i></i><span class="owner-mark">W</span><b class="name-copy">WHISPURR</b></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pocket Portrait Case</strong><small>Protective shell · matte finish</small></span><b>$34</b></div></a><button class="customize-product">Customize</button></article>
       </div>
       <div class="arcade-shop" data-audience="owner"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Their pattern, made for you</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
       <div class="owner-ideas"><span>Next up</span><button>Keychains</button><button>Sweatshirts</button><button>Travel mugs</button><button>Notebook covers</button><button>Gift wrap</button></div>
       <p class="catalog-note">These owner products are concept categories for specialist production partners. Arcade-generated patterns can supply print-ready surface artwork where a compatible product or fabric workflow exists.</p>
     </section>
 
-    <section class="pet-home section workspace-view" id="home" data-route="home">
-      <div class="home-copy"><p class="eyebrow">Their little world</p><h2>Try it all on.<br>Then make it home.</h2><p>See every piece on your pet and in their space before anything is made. Save combinations, swap patterns, and build a room that feels like theirs.</p><div class="home-tabs"><button class="active" data-room="sleep">Sleep nook</button><button data-room="walk">Walk wall</button><button data-room="dine">Dinner spot</button></div><button class="secondary" id="saveRoom">Save this room <span>♡</span></button></div>
-      <div class="room" id="roomScene">
-        <div class="room-window"><div></div></div><div class="room-art">GOOD<br>DOG</div><div class="room-hook"><i></i><i></i><i></i></div>
-        <div class="dog room-dog"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
-        <div class="room-bed"><span class="name-copy">MILO</span></div><div class="room-bowl"><span class="name-copy">MILO</span></div>
-        <div class="room-label"><span>Current look</span><b>Golden hour garden</b></div>
+    <section class="cubby section workspace-view" id="cubby" data-route="home">
+      <div class="cubby-head">
+        <div><p class="eyebrow">Their little world</p><h2><span class="pet-name-copy">Whispurr</span>’s<br><em>Cubby.</em></h2></div>
+        <div class="cubby-intro">
+          <p>Everything made for <span class="pet-name-copy">Whispurr</span>, shelved by how they live: sleeping, mealtimes, heading out, lounging around the house, and keepsakes for you.</p>
+          <p class="cubby-note" id="cubbyNote" aria-live="polite"></p>
+          <button class="primary" id="orderCubby" disabled>Order what’s ready <span>→</span></button>
+        </div>
+      </div>
+      <div class="cubby-room">
+        <div class="cubby-pet" aria-hidden="true">
+          <div class="cubby-pet-model" id="cubbyModel" hidden></div>
+          <div class="dog cubby-pet-art"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">W</div><div class="leg one"></div><div class="leg two"></div></div>
+        </div>
+        <div class="cubby-shelves" id="cubbyShelves"></div>
       </div>
     </section>
 
@@ -200,7 +210,7 @@
   <footer data-route="landing"><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
 
   <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
-  <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">MILO</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
+  <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">WHISPURR</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
   <div class="toast" id="toast" role="status" aria-live="polite">Added to your room</div>
   <script src="app.js"></script>
 </body>

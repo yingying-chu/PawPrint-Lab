@@ -1,14 +1,12 @@
-import { getApiUser, unauthorized } from "@/lib/api-auth";
 import { arcadeConfigured } from "@/lib/arcade";
-import { getCatalog } from "@/lib/catalog";
+import { curatedCatalog, getCatalog } from "@/lib/catalog";
 import { arcadeErrorResponse } from "@/lib/designs";
 
 export const runtime = "edge";
 
+// Public: the catalog holds product names and Arcade's category thumbnails, no user data.
 export async function GET() {
-  const user = await getApiUser();
-  if (!user) return unauthorized();
-  if (!arcadeConfigured()) return Response.json({ configured: false, items: [] });
+  if (!arcadeConfigured()) return Response.json({ configured: false, items: curatedCatalog() });
   try {
     return Response.json({ configured: true, items: await getCatalog() });
   } catch (error) {
