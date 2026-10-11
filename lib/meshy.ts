@@ -55,18 +55,20 @@ export type MeshyModelTask = MeshyTask & {
 
 export type ImageTaskType = "text-to-image" | "image-to-image";
 
-// nano-banana-2 balances quality and cost (6 credits per image for both endpoints).
-const IMAGE_MODEL = "nano-banana-2";
+// nano-banana-2 balances quality and cost (6 credits per image); nano-banana-pro
+// (9 credits) follows detailed edits such as removing a leash more reliably.
+export type ImageModel = "nano-banana-2" | "nano-banana-pro";
 
 /** Generates one image, guided by reference photos when given. Returns the task to poll. */
 export async function createImageTask(input: {
   prompt: string;
   referenceImageUrls?: string[];
   removeBackground?: boolean;
+  model?: ImageModel;
 }) {
   const type: ImageTaskType = input.referenceImageUrls?.length ? "image-to-image" : "text-to-image";
   const { result } = await call<{ result: string }>(type, {
-    ai_model: IMAGE_MODEL,
+    ai_model: input.model ?? "nano-banana-2",
     prompt: input.prompt.slice(0, 1000),
     aspect_ratio: "1:1",
     remove_background: input.removeBackground ?? false,
@@ -78,9 +80,10 @@ export async function createImageTask(input: {
 export const getImageTask = (type: ImageTaskType, taskId: string) =>
   call<MeshyImageTask>(`${type}/${encodeURIComponent(taskId)}`);
 
-export async function createImageTo3DTask(imageUrl: string) {
+/** Starts image-to-3D from an image, or from a finished single-image Meshy task. */
+export async function createImageTo3DTask(input: { imageUrl: string } | { inputTaskId: string }) {
   return call<{ result: string }>("image-to-3d", {
-    image_url: imageUrl,
+    ...("inputTaskId" in input ? { input_task_id: input.inputTaskId } : { image_url: input.imageUrl }),
     ai_model: "latest",
     model_type: "standard",
     // Default Meshy output can approach 100 MB; a remeshed ~30k-triangle model with a

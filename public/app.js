@@ -597,9 +597,8 @@ $("#createTwin").addEventListener("click", async (e) => {
   btn.disabled = false;
   btn.innerHTML = "Prototype twin prepared <span>✓</span>";
   $("#pipelineState").hidden = false;
-  if (jobStatus === "submitted") {
-    $("#pipelineDetail").textContent =
-      "Meshy is building the 3D model. This usually takes a few minutes.";
+  if (TWIN_IN_PROGRESS.includes(jobStatus)) {
+    showTwinProgress(pet, pet.twinJob);
     pollTwin(pet, pet.twinJob.id);
   } else if (jobStatus === "demo") {
     showTwinModel(pet);
@@ -614,8 +613,8 @@ $("#createTwin").addEventListener("click", async (e) => {
   $("#twinNextActions").hidden = false;
   $$(".flow-progress span").forEach((x) => x.classList.add("active"));
   toast(
-    jobStatus === "submitted"
-      ? `${petName(pet)}'s 3D job was submitted`
+    TWIN_IN_PROGRESS.includes(jobStatus)
+      ? `${petName(pet)}'s 3D twin is on its way`
       : jobStatus === "demo"
         ? `${petName(pet)}'s 3D twin is ready`
         : `${petName(pet)}'s prototype twin is prepared`,
@@ -1257,6 +1256,19 @@ function showTwinModel(pet) {
     ? "Demo model · made earlier with Meshy from this same photo · drag to rotate."
     : "3D model ready · drag to rotate. Saved privately to your account.";
 }
+// A twin is drawn as a cute character first (styling), then built in 3D.
+const TWIN_IN_PROGRESS = ["styling", "starting_3d", "submitted", "saving"];
+function showTwinProgress(pet, job) {
+  const name = petName(pet);
+  const [status, detail] = {
+    styling: [`Drawing ${name}'s look · ${job.progress}%`, `Step 1 of 2 · Meshy is drawing ${name} as a cute character, without the harness or leash.`],
+    starting_3d: ["Starting the 3D build…", "Step 2 of 2 · Sending the character to Meshy's 3D builder."],
+    submitted: [`Building 3D model · ${job.progress}%`, `Step 2 of 2 · Meshy is building the 3D model · ${job.progress}% done.`],
+    saving: ["Saving 3D model…", "Meshy finished. Copying the model into your private storage…"],
+  }[job.status];
+  $("#twinStatus").textContent = status;
+  $("#pipelineDetail").textContent = detail;
+}
 async function pollTwin(pet, jobId) {
   if (polling.has(jobId)) return;
   polling.add(jobId);
@@ -1272,14 +1284,8 @@ async function pollTwin(pet, jobId) {
         throw error;
       }
       pet.twinJob = job;
-      if (job.status === "submitted" || job.status === "saving") {
-        if (pet === activePet()) {
-          const saving = job.status === "saving";
-          $("#twinStatus").textContent = saving ? "Saving 3D model…" : `Building 3D model · ${job.progress}%`;
-          $("#pipelineDetail").textContent = saving
-            ? "Meshy finished. Copying the model into your private storage…"
-            : `Meshy is building the 3D model · ${job.progress}% done.`;
-        }
+      if (TWIN_IN_PROGRESS.includes(job.status)) {
+        if (pet === activePet()) showTwinProgress(pet, job);
         continue;
       }
       if (pet === activePet()) {
@@ -1312,14 +1318,14 @@ async function loadPetMedia() {
     pet.characters = characters;
     if (job) {
       pet.twinJob = job;
-      if (["ready", "submitted", "saving"].includes(job.status)) pet.twinReady = true;
+      if (job.status === "ready" || TWIN_IN_PROGRESS.includes(job.status)) pet.twinReady = true;
     }
     if (pet !== activePet()) return;
     renderStickerPack();
     renderPatternReference();
     showTwinModel(pet);
     characters.filter((c) => c.status === "running").forEach((c) => pollCharacter(pet, c.id));
-    if (job?.status === "submitted" || job?.status === "saving") pollTwin(pet, job.id);
+    if (TWIN_IN_PROGRESS.includes(job?.status)) pollTwin(pet, job.id);
   } catch {
     // Signed out or offline: stickers and the 3D twin stay hidden.
   }
