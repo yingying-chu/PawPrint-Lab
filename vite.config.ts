@@ -1,5 +1,5 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
@@ -36,7 +36,9 @@ const localBindingConfig = {
     : [],
 };
 
-export default defineConfig(async ({ command }) => {
+export default defineConfig(async ({ command, mode }) => {
+  // The demo passcode lives in .env; the sign-in middleware reads it from process.env.
+  process.env.PAWPRINT_DEMO_PASSCODE ??= loadEnv(mode, process.cwd(), "PAWPRINT_").PAWPRINT_DEMO_PASSCODE;
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
   process.env.WRANGLER_SEND_METRICS ??= "false";
@@ -53,9 +55,9 @@ export default defineConfig(async ({ command }) => {
 
   return {
     server: {
-      ...(managedLinux
-        ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
-        : {}),
+      // Lets a Cloudflare quick tunnel (https://*.trycloudflare.com) share the dev server for demos.
+      allowedHosts: managedLinux ? ["terminal.local"] : [".trycloudflare.com"],
+      ...(managedLinux ? { host: "0.0.0.0" } : {}),
       ...(isCodexSeatbeltSandbox
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),

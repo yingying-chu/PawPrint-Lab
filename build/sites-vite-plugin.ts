@@ -1,5 +1,6 @@
 // Vendored from @openai/sites-vite-plugin 0.2.0 (openai/sites#9).
 // See sites-vite-plugin.LICENSE for the upstream MIT license.
+import { timingSafeEqual } from "node:crypto";
 import { access, cp, mkdir, rm } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve } from "node:path";
@@ -11,6 +12,22 @@ const localFullName = "Seedy";
 const localCookieName = "__sites_local_auth";
 const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const localAddresses = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
+// Pawprint demo: a Cloudflare quick tunnel can share the local sign-in, but only
+// with visitors who enter PAWPRINT_DEMO_PASSCODE (set in .env). Off when unset.
+const isTunnelHost = (hostname: string) => hostname.endsWith(".trycloudflare.com");
+const demoPasscode = () => process.env.PAWPRINT_DEMO_PASSCODE?.trim() || "";
+function passcodeMatches(code: string | null) {
+  const expected = Buffer.from(demoPasscode());
+  const given = Buffer.from(code ?? "");
+  return expected.length > 0 && given.length === expected.length && timingSafeEqual(given, expected);
+}
+function passcodeForm(returnTo: string, wrong: boolean) {
+  const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo sign-in · Pawprint Atelier</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fff4e6;color:#1f2440;font:15px system-ui,sans-serif}form{background:#fff8ee;border:2px solid #1f2440;border-radius:24px;padding:28px;width:min(380px,90vw);display:grid;gap:14px}h1{margin:0;font:600 26px Georgia,serif}p{margin:0;color:#474c66;line-height:1.5}input{border:1px solid rgba(31,36,64,.22);border-radius:12px;padding:13px 14px;font-size:15px}button{border:0;border-radius:999px;background:#ff6b3d;color:#fff;font-weight:700;padding:15px;font-size:15px;box-shadow:0 4px 0 #1f2440;cursor:pointer}.wrong{color:#a84428}</style></head>
+<body><form method="get" action="/signin-with-chatgpt"><h1>Demo sign-in</h1><p>Enter the demo passcode to generate designs and save photos. Without it you can still browse the shop.</p>${wrong ? '<p class="wrong">That passcode didn’t match.</p>' : ""}<input name="code" autocomplete="off" placeholder="Passcode" required autofocus><input type="hidden" name="return_to" value="${escape(returnTo)}"><button>Sign in to the demo</button></form></body></html>`;
+}
+
 const authPaths = new Set([
   "/signin-with-chatgpt",
   "/signout-with-chatgpt",
@@ -70,8 +87,10 @@ export function sites({ mockAuth = true } = {}): Plugin {
         const hostname = authority.hostname
           .replace(/^\[|\]$/g, "")
           .toLowerCase();
+        // cloudflared forwards tunnel traffic from this machine, so it passes the address check.
+        const demoHost = Boolean(demoPasscode()) && isTunnelHost(hostname);
         if (
-          !localHosts.has(hostname) ||
+          !(localHosts.has(hostname) || demoHost) ||
           !localAddresses.has(request.socket.remoteAddress ?? "") ||
           url.origin !== authority.origin
         ) {
@@ -155,6 +174,14 @@ export function sites({ mockAuth = true } = {}): Plugin {
           return;
         }
 
+        if (signIn && demoHost && !passcodeMatches(url.searchParams.get("code"))) {
+          response.statusCode = 200;
+          response.setHeader("Content-Type", "text/html; charset=utf-8");
+          response.setHeader("Cache-Control", "private, no-store");
+          response.end(passcodeForm(safeReturn(url.searchParams.get("return_to")), url.searchParams.has("code")));
+          return;
+        }
+
         response.statusCode = request.method === "POST" ? 303 : 302;
         response.setHeader("Cache-Control", "private, no-store");
         response.setHeader(
@@ -165,7 +192,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
           "Set-Cookie",
           `${localCookieName}=${signIn ? "1" : ""}; Path=/; ${
             signOut ? "Max-Age=0; " : ""
-          }HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`,
+          }HttpOnly; SameSite=Lax${secure || demoHost ? "; Secure" : ""}`,
         );
         response.end();
       });
