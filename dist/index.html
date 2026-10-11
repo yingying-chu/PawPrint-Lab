@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create a size-aware digital twin of your pet, design personalized products, and preview their little world." />
+  <title>Pawprint Atelier — Made to belong</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
+    <nav aria-label="Main navigation"><a href="#studio">Studio</a><a href="#collection">Collection</a><a href="#home">Pet home</a></nav>
+    <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Made for one very particular pet</p>
+        <h1>Nothing off<br>the <em>shelf.</em></h1>
+        <p class="lede">Turn a photo into a size-aware digital pet, then make the pieces that fit their body, their personality, and your home.</p>
+        <a class="primary" href="#studio">Meet your pet twin <span>→</span></a>
+        <div class="trust-row"><span>Photo private by default</span><span>Fit checked before making</span></div>
+      </div>
+      <div class="hero-scene" aria-label="Illustration of a dog in a personalized room">
+        <div class="sun"></div><div class="window"><i></i><i></i></div>
+        <div class="shelf"><span class="vase">✿</span><span class="frame">MILO</span></div>
+        <div class="dog large"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
+        <div class="bed"><span>MILO’S SPOT</span></div>
+        <div class="bowl">MILO</div>
+        <p class="scene-note"><b>Designed together.</b><br>Made to their measurements.</p>
+      </div>
+    </section>
+
+    <section class="process-strip" aria-label="How it works">
+      <div><b>01</b><span><strong>Capture</strong>Your pet + their scale</span></div>
+      <div><b>02</b><span><strong>Create</strong>Portraits and patterns</span></div>
+      <div><b>03</b><span><strong>Try on</strong>Every detail, in context</span></div>
+      <div><b>04</b><span><strong>Make</strong>With vetted partners</span></div>
+    </section>
+
+    <section class="studio section" id="studio">
+      <div class="section-head"><div><p class="eyebrow">The fitting room</p><h2>Start with who<br>we’re making for.</h2></div><p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p></div>
+      <div class="studio-grid">
+        <div class="capture-card">
+          <div class="step-label">Step 1 of 3 <span>Pet profile</span></div>
+          <label class="upload-zone" for="petPhoto">
+            <input type="file" id="petPhoto" accept="image/*" capture="environment" />
+            <div class="upload-preview" id="uploadPreview"><div class="camera-icon">⌁</div><strong>Add a full-body photo</strong><span>Standing, side-on works beautifully</span></div>
+          </label>
+          <div class="form-row">
+            <label>Pet’s name<input id="petName" value="Milo" maxlength="12" /></label>
+            <label>Pet type<select id="petType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+          </div>
+          <button class="text-button" id="measureToggle" aria-expanded="false">＋ Add measurements for a more precise fit</button>
+          <div class="measurements" id="measurements">
+            <label>Back length <span><input type="number" value="48" min="5" max="150"> cm</span></label>
+            <label>Chest <span><input type="number" value="62" min="5" max="200"> cm</span></label>
+            <label>Neck <span><input type="number" value="38" min="5" max="120"> cm</span></label>
+          </div>
+          <button class="primary full" id="createTwin">Create pet twin <span>→</span></button>
+        </div>
+        <div class="twin-card">
+          <div class="twin-top"><span>Digital twin preview</span><span class="status-dot">Size confidence · 92%</span></div>
+          <div class="twin-view">
+            <div class="grid-floor"></div>
+            <div class="measure-line vertical"><span>53 cm</span></div><div class="measure-line horizontal"><span>71 cm</span></div>
+            <div class="dog model" id="petModel"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
+            <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
+          </div>
+          <div class="twin-bottom"><div><small>FIT PROFILE</small><strong id="fitProfile">Medium · long body</strong></div><button id="adjustFit">Adjust fit</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="portrait section">
+      <div class="section-head"><div><p class="eyebrow">Portrait maker</p><h2>Their face,<br>your imagination.</h2></div><p>Choose a direction or describe your own. We turn their portrait into a repeatable motif ready for product surfaces.</p></div>
+      <div class="portrait-workbench">
+        <div class="portrait-canvas" id="portraitCanvas">
+          <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
+          <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
+          <div class="portrait-name" id="portraitName">MILO</div>
+        </div>
+        <div class="portrait-controls">
+          <p class="control-label">Choose an art direction</p>
+          <div class="style-picker" role="radiogroup">
+            <button class="style active" data-style="storybook"><span>〽</span>Storybook</button>
+            <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
+            <button class="style" data-style="minimal"><span>◯</span>Minimal line</button>
+          </div>
+          <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
+          <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
+          <button class="primary full" id="generatePattern">Generate pattern <span>✦</span></button>
+          <p class="arcade-note">Surface pattern creation can be powered by Arcade. Pet likeness remains a separate portrait layer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="collection section" id="collection">
+      <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Milo</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
+      <div class="product-grid">
+        <article class="product featured" data-category="rest"><div class="product-art bed-art"><div class="mini-bed"><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Cloud bed">＋</button><span class="fit-badge">Best fit</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></article>
+        <article class="product" data-category="wear"><div class="product-art scarf-art"><div class="scarf-shape">M</div><button class="quick-add" data-product="Ribbon scarf">＋</button><span class="maker-badge">Arcade-ready surface</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></article>
+        <article class="product" data-category="walk"><div class="product-art harness-art"><div class="harness-shape"><i></i><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Everyday harness">＋</button></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></article>
+        <article class="product" data-category="dine"><div class="product-art bowl-art"><div class="mini-bowl"><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Portrait bowl">＋</button></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></article>
+      </div>
+      <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
+    </section>
+
+    <section class="pet-home section" id="home">
+      <div class="home-copy"><p class="eyebrow">Their little world</p><h2>Try it all on.<br>Then make it home.</h2><p>See every piece on your pet and in their space before anything is made. Save combinations, swap patterns, and build a room that feels like theirs.</p><div class="home-tabs"><button class="active" data-room="sleep">Sleep nook</button><button data-room="walk">Walk wall</button><button data-room="dine">Dinner spot</button></div><button class="secondary" id="saveRoom">Save this room <span>♡</span></button></div>
+      <div class="room" id="roomScene">
+        <div class="room-window"><div></div></div><div class="room-art">GOOD<br>DOG</div><div class="room-hook"><i></i><i></i><i></i></div>
+        <div class="dog room-dog"><div class="tail"></div><div class="body"></div><div class="head"><i class="ear l"></i><i class="ear r"></i><b class="eye l"></b><b class="eye r"></b><span class="snout"></span></div><div class="bandana">M</div><div class="leg one"></div><div class="leg two"></div></div>
+        <div class="room-bed"><span class="name-copy">MILO</span></div><div class="room-bowl"><span class="name-copy">MILO</span></div>
+        <div class="room-label"><span>Current look</span><b>Golden hour garden</b></div>
+      </div>
+    </section>
+
+    <section class="maker-section section">
+      <p class="eyebrow">From screen to doorstep</p><h2>Designed by you.<br><em>Made by people we trust.</em></h2>
+      <div class="maker-flow"><div><b>01</b><span><strong>Fit review</strong>Measurements checked before production</span></div><div><b>02</b><span><strong>Maker match</strong>Sent to a vetted specialist</span></div><div><b>03</b><span><strong>One checkout</strong>Track every custom piece together</span></div></div>
+      <p class="fineprint">No inventory claims are made in this concept. Product availability and maker vetting would be confirmed during partner onboarding.</p>
+    </section>
+  </main>
+
+  <footer><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">Added to your room</div>
+  <script src="app.js"></script>
+</body>
+</html>
