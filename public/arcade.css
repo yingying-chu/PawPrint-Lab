@@ -1,5 +1,11 @@
 /* Arcade-generated patterns in the design studio and real products in the shop. */
 
+/* Component display rules (e.g. .secondary { display: inline-flex }) otherwise beat the
+   hidden attribute, leaving "hidden" controls on screen. */
+[hidden] {
+  display: none !important;
+}
+
 .arcade-pattern {
   position: absolute;
   inset: 0;
@@ -189,7 +195,7 @@
 
 .design-mode {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   margin-bottom: 18px;
 }

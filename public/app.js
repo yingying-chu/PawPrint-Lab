@@ -701,6 +701,7 @@ async function saveLocalPreviewDesign(btn, reason) {
 $("#generatePattern").addEventListener("click", async (e) => {
   const pet = activePet(),
     btn = e.currentTarget;
+  if (state.designMode === "lettering") return saveLettering(btn);
   if (state.designMode !== "pattern") return generateMeshyImage(btn);
   // A chosen character already carries the likeness, so only plain patterns need the twin.
   if (!pet.twinReady && !state.patternCharacterId) {
@@ -872,7 +873,7 @@ function setArcadeStatus(html, tone = "") {
 function updateReferenceOption() {
   const photo = storedPhoto(activePet());
   // A sticker sheet is drawn from a character, so the photo opt-in doesn't apply.
-  $("#arcadeReference").hidden = !photo || state.designMode === "sheet";
+  $("#arcadeReference").hidden = !photo || !["pattern", "character"].includes(state.designMode);
   if (!photo) $("#usePhotoReference").checked = false;
 }
 function showArcadeDesign(design) {
@@ -1082,8 +1083,8 @@ state.patternCharacterId = null;
 state.sheetSourceId = null;
 const MESHY_MODES = ["character", "sheet"];
 const generateLabel = () =>
-  `${{ character: "Draw character with Meshy", sheet: "Make sticker sheet with Meshy" }[state.designMode] || "Generate with Arcade"} <span>✦</span>`;
-const petCharacters = (pet) => (pet.characters || []).filter((c) => c.kind !== "sticker_sheet");
+  `${{ character: "Draw character with Meshy", sheet: "Make sticker sheet with Meshy", lettering: "Save lettering to gallery" }[state.designMode] || "Generate with Arcade"} <span>✦</span>`;
+const petCharacters = (pet) => (pet.characters || []).filter((c) => c.kind === "character");
 const readyCharacters = (pet) => petCharacters(pet).filter((c) => c.status === "succeeded");
 const stickerSheets = (pet) => (pet.characters || []).filter((c) => c.kind === "sticker_sheet");
 const DESIGN_NOTES = {
@@ -1092,6 +1093,8 @@ const DESIGN_NOTES = {
   character:
     "Meshy draws the character as a transparent PNG in about a minute. It joins the gallery below, ready to become stickers or a pattern.",
   sheet: "Meshy draws nine hand-drawn stickers of the chosen character on one transparent sheet, in about a minute.",
+  lettering:
+    "Lettering is stitched right here from single-line embroidery fonts: no AI and no credits. Save it to the gallery or download a transparent PNG.",
 };
 // Each mode keeps its own description, so pattern text never leaks into a character prompt.
 state.promptByMode = {
@@ -1115,9 +1118,15 @@ function setDesignMode(mode) {
   $$(".ref-provider").forEach((el) => (el.textContent = meshy ? "Meshy" : "Arcade"));
   $$(".ref-output").forEach((el) => (el.textContent = mode === "character" ? "character" : "pattern"));
   $("#designNote").textContent = DESIGN_NOTES[mode];
-  $("#applyBrand").hidden = meshy;
+  $("#applyBrand").hidden = mode !== "pattern";
   $("#sheetOptions").hidden = mode !== "sheet";
   $("#portraitCanvas").classList.toggle("sticker-mode", meshy);
+  $("#portraitCanvas").classList.toggle("lettering-mode", mode === "lettering");
+  $("#letteringStage").hidden = mode !== "lettering";
+  if (mode === "lettering") {
+    if (!$("#letterText").value.trim()) $("#letterText").value = petName(activePet());
+    renderLettering();
+  }
   updateReferenceOption();
   renderSheetSources();
   renderPatternReference();
@@ -1172,6 +1181,8 @@ function showSticker(asset) {
   $("#portraitCanvas").classList.toggle("has-sticker", Boolean(asset?.imageUrl));
 }
 function galleryCard(asset) {
+  if (asset.kind === "lettering")
+    return `<figure class="sticker-card lettering"><div class="sticker-art"><img src="${escapeHtml(asset.imageUrl)}" alt="${escapeHtml(asset.name)}"></div><figcaption><b>${escapeHtml(asset.name)}</b><small>Embroidery · ${escapeHtml(asset.prompt)}</small><span><a href="${escapeHtml(asset.imageUrl)}?download=1">Download</a></span></figcaption></figure>`;
   const sheet = asset.kind === "sticker_sheet";
   const cls = `sticker-card${sheet ? " sheet" : ""}`;
   if (asset.status === "running")
@@ -1189,7 +1200,7 @@ function galleryCard(asset) {
 }
 function renderStickerPack() {
   const pet = activePet(),
-    items = [...petCharacters(pet), ...stickerSheets(pet)];
+    items = [...petCharacters(pet), ...stickerSheets(pet), ...letterings(pet)];
   $("#stickerPack").classList.toggle("empty", !items.length);
   $("#stickerGrid").innerHTML = items.map(galleryCard).join("");
   $$("[data-make-sheet]").forEach((btn) =>
@@ -1325,6 +1336,100 @@ async function pollCharacter(pet, characterId) {
     if (pet === activePet()) setArcadeStatus(escapeHtml(error.message), "error");
   } finally {
     polling.delete(characterId);
+  }
+}
+
+// Embroidery lettering: drawn in the browser by public/lettering.js, so it's instant and free.
+state.lettering = { font: "rounded", stitch: "running", thread: "#c0395a", motif: "paw", result: null };
+const letterings = (pet) => (pet.characters || []).filter((c) => c.kind === "lettering");
+function letteringOptions() {
+  return {
+    text: $("#letterText").value.trim() || petName(activePet()),
+    subline: $("#letterSubline").value.trim(),
+    font: state.lettering.font,
+    stitch: state.lettering.stitch,
+    thread: state.lettering.thread,
+    motif: state.lettering.motif,
+  };
+}
+// The exported image drops the sewing animation so every stitch is visible.
+const stillSvg = (svg) => svg.replace('class="lettering-svg"', "");
+let letteringRender = 0;
+async function renderLettering() {
+  const ticket = ++letteringRender;
+  const result = await window.Lettering.render(letteringOptions());
+  if (ticket !== letteringRender) return;
+  state.lettering.result = result;
+  const hoop = $("#letteringHoop");
+  hoop.innerHTML = result.svg;
+  // Sew in over at most ~1.6s, however many stitches there are.
+  hoop.querySelector("svg").style.setProperty("--step", `${Math.min(14, 1600 / Math.max(result.stitches, 1))}ms`);
+  const src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(stillSvg(result.svg))}`;
+  $$("#letteringMockups img").forEach((img) => (img.src = src));
+}
+let letteringTimer = null;
+const queueLettering = () => {
+  clearTimeout(letteringTimer);
+  letteringTimer = setTimeout(renderLettering, 220);
+};
+[
+  ["#letterFonts", "font"],
+  ["#letterStitches", "stitch"],
+  ["#letterThreads", "thread"],
+  ["#letterMotifs", "motif"],
+].forEach(([group, key]) =>
+  $$(`${group} button`).forEach((btn) =>
+    btn.addEventListener("click", () => {
+      $$(`${group} button`).forEach((b) => b.classList.toggle("active", b === btn));
+      state.lettering[key] = btn.dataset[key];
+      renderLettering();
+    }),
+  ),
+);
+$("#letterText").addEventListener("input", queueLettering);
+$("#letterSubline").addEventListener("input", queueLettering);
+async function letteringPng() {
+  if (!state.lettering.result) await renderLettering();
+  const { svg, width, height } = state.lettering.result;
+  return window.Lettering.toPng(svg, width, height);
+}
+$("#downloadLettering").addEventListener("click", async () => {
+  const blob = await letteringPng();
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${petName(activePet()).toLowerCase().replace(/[^a-z0-9]+/g, "-")}-lettering.png`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+});
+async function saveLettering(btn) {
+  const pet = activePet(),
+    options = letteringOptions();
+  btn.disabled = true;
+  btn.innerHTML = "Saving… <span>✦</span>";
+  try {
+    const form = new FormData();
+    form.append("file", new File([await letteringPng()], "lettering.png", { type: "image/png" }));
+    form.append("petKey", pet.id);
+    form.append("petName", petName(pet));
+    form.append("text", options.text);
+    form.append("stitch", options.stitch);
+    form.append("fontLabel", $("#letterFonts button.active")?.textContent || "");
+    const response = await fetch("/api/lettering", { method: "POST", body: form });
+    const payload = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      setArcadeStatus(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to save lettering. You can still download it.`, "error");
+      return;
+    }
+    if (!response.ok) throw new Error(payload.error || "Could not save the lettering");
+    pet.characters = [payload.character, ...(pet.characters || [])];
+    renderStickerPack();
+    setArcadeStatus(`${escapeHtml(payload.character.name)} is saved in the gallery below.`, "ok");
+    toast("Lettering saved");
+  } catch (error) {
+    setArcadeStatus(escapeHtml(error.message), "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = generateLabel();
   }
 }
 
@@ -1531,7 +1636,7 @@ async function renderCubby() {
   else note.innerHTML = `Shelved in <b>${escapeHtml(design.name)}</b>. Make any piece, then order everything that's ready in one checkout.`;
 
   // Printable sticker sheets first, then the characters they come from.
-  const keepsakes = [...stickerSheets(pet), ...petCharacters(pet)].filter((c) => c.status === "succeeded").slice(0, 4);
+  const keepsakes = [...stickerSheets(pet), ...letterings(pet), ...petCharacters(pet)].filter((c) => c.status === "succeeded").slice(0, 5);
   $("#cubbyShelves").innerHTML = SHELVES.map((shelf) => {
     const tiles = [
       ...catalog.filter((item) => item.useCase === shelf.id).map((item) => arcadeTile(item, design, products)),
@@ -1540,8 +1645,8 @@ async function renderCubby() {
             cubbyTile({
               image: s.imageUrl,
               title: s.name,
-              note: s.kind === "sticker_sheet" ? "9 stickers, ready to print" : "Their own character art",
-              chip: s.kind === "sticker_sheet" ? "Sticker sheet · Meshy" : "Character · Meshy",
+              note: { sticker_sheet: "9 stickers, ready to print", lettering: "Lettering for embroidery" }[s.kind] || "Their own character art",
+              chip: { sticker_sheet: "Sticker sheet · Meshy", lettering: "Embroidery · concept" }[s.kind] || "Character · Meshy",
               art: "sticker-tile",
               action: `<a class="cubby-action" href="${escapeHtml(s.imageUrl)}?download=1">Download</a>`,
             }),

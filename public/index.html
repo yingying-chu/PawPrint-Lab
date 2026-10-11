@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="arcade.css" />
   <link rel="stylesheet" href="pet-variants.css" />
   <link rel="stylesheet" href="cubby.css" />
+  <link rel="stylesheet" href="lettering.css" />
   <style>body:not([data-route]) [data-route]:not([data-route="landing"]){display:none}</style>
 </head>
 <body>
@@ -122,10 +123,11 @@
           <div class="portrait-name" id="portraitName">WHISPURR</div>
           <img class="arcade-pattern" id="arcadePattern" alt="" hidden>
           <img class="sticker-preview" id="stickerPreview" alt="" hidden>
+          <div class="lettering-stage" id="letteringStage" hidden><div class="lettering-hoop" id="letteringHoop"></div></div>
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
-          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · printed goods</small></button><button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button><button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button></div>
+          <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · printed goods</small></button><button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button><button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button><button type="button" data-design-mode="lettering" aria-pressed="false">Lettering<small>embroidery · drawn instantly</small></button></div>
           <div class="brand-progress" data-modes="pattern"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
           <p class="control-label" data-modes="pattern character">Choose a design direction</p>
           <div class="style-picker" role="radiogroup" data-modes="pattern character">
@@ -137,6 +139,7 @@
           <div class="palette" data-modes="pattern character"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
           <p class="palette-hint" data-modes="pattern character">Tap colors to include them in the design.</p>
           <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
+          <div class="lettering-options" id="letteringOptions" data-modes="lettering" hidden><label class="sheet-theme">Name<input id="letterText" maxlength="24"></label><label class="sheet-theme">Second line <small>optional</small><input id="letterSubline" maxlength="32" placeholder="e.g. est. 2021 · good cat · Melbourne"></label><span class="control-label">Font</span><div class="choice-row" id="letterFonts"><button type="button" class="active" data-font="rounded">Rounded</button><button type="button" data-font="hand">Handwritten</button><button type="button" data-font="script">Script</button><button type="button" data-font="typewriter">Typewriter</button></div><span class="control-label">Stitch</span><div class="choice-row" id="letterStitches"><button type="button" class="active" data-stitch="running">Running stitch</button><button type="button" data-stitch="chain">Chain stitch</button></div><span class="control-label">Thread</span><div class="palette thread-palette" id="letterThreads"><button type="button" data-thread="#c0395a" style="--swatch:#c0395a" aria-label="Rose thread" class="active"></button><button type="button" data-thread="#3b4a8f" style="--swatch:#3b4a8f" aria-label="Navy thread"></button><button type="button" data-thread="#5f7a5a" style="--swatch:#5f7a5a" aria-label="Sage thread"></button><button type="button" data-thread="#d39b2a" style="--swatch:#d39b2a" aria-label="Mustard thread"></button><button type="button" data-thread="#2a2f3a" style="--swatch:#2a2f3a" aria-label="Ink thread"></button></div><span class="control-label">Motif</span><div class="choice-row" id="letterMotifs"><button type="button" data-motif="none">None</button><button type="button" class="active" data-motif="paw">Paw</button><button type="button" data-motif="heart">Heart</button></div><button type="button" class="secondary full" id="downloadLettering">Download PNG <span>↓</span></button></div>
           <div class="sheet-options" id="sheetOptions" hidden><span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div><label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label><label class="sheet-theme">Extra notes <small>optional</small><input id="sheetNotes" maxlength="300" placeholder="e.g. include a sleepy one and a birthday one"></label></div>
           <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this character as a reference">×</button></div>
           <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
@@ -146,6 +149,7 @@
           <p class="arcade-note" id="designNote">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
         </div>
       </div>
+          <div class="lettering-mockups" id="letteringMockups" data-modes="lettering" hidden><p class="control-label">Preview on</p><div class="mockup-row"><figure class="mockup cap"><div class="mockup-art"><div class="cap-crown"><img alt=""></div><div class="cap-brim"></div></div><figcaption>Cap · embroidered front</figcaption></figure><figure class="mockup sweatshirt"><div class="mockup-art"><div class="sweat-body"><img alt=""></div></div><figcaption>Sweatshirt · chest</figcaption></figure><figure class="mockup tote-bag"><div class="mockup-art"><div class="tote-body"><img alt=""></div></div><figcaption>Canvas tote</figcaption></figure></div><p class="catalog-note">Mockups for the demo. Embroidered pieces need an embroidery maker, which isn’t connected yet.</p></div>
     </section>
 
     <section class="sticker-pack section workspace-view" id="stickerPack" data-route="designs" hidden>
@@ -213,6 +217,7 @@
   <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
   <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">WHISPURR</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
   <div class="toast" id="toast" role="status" aria-live="polite">Added to your room</div>
+  <script src="lettering.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

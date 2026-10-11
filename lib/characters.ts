@@ -7,7 +7,7 @@ import { privateAssetKey, recordPetId } from "@/lib/photo-storage";
 
 type PetAsset = typeof petAssets.$inferSelect;
 
-export type AssetKind = "character" | "sticker_sheet";
+export type AssetKind = "character" | "sticker_sheet" | "lettering";
 
 export const CHARACTER_STYLES: Record<string, string> = {
   storybook: "soft storybook illustration with gentle shading",

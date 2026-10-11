@@ -1,0 +1,221 @@
+/* Embroidery lettering: linen stage, sewing animation, controls and product mockups. */
+
+.portrait-canvas.lettering-mode .portrait-dog,
+.portrait-canvas.lettering-mode .spark,
+.portrait-canvas.lettering-mode .portrait-name,
+.portrait-canvas.lettering-mode .brand-output-tabs,
+.portrait-canvas.lettering-mode .arcade-pattern,
+.portrait-canvas.lettering-mode .sticker-preview {
+  display: none;
+}
+
+/* A square of linen with a scalloped, stitched edge. */
+.lettering-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background-color: #f3ecdd;
+  background-image: repeating-linear-gradient(0deg, rgba(120, 100, 70, 0.07) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(120, 100, 70, 0.07) 0 1px, transparent 1px 3px);
+}
+.lettering-stage[hidden] {
+  display: none;
+}
+.lettering-stage::before {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border: 2px dashed rgba(59, 74, 143, 0.55);
+  border-radius: 18px;
+  pointer-events: none;
+}
+.lettering-hoop {
+  width: 86%;
+  display: grid;
+  place-items: center;
+}
+.lettering-hoop svg {
+  width: 100%;
+  height: auto;
+  max-height: 70%;
+}
+
+/* Stitches appear in order, as if sewn. */
+.lettering-svg .st {
+  opacity: 0;
+  animation: lettering-sew 0.12s ease-out forwards;
+  animation-delay: calc(var(--i) * var(--step, 10ms));
+}
+@keyframes lettering-sew {
+  from {
+    opacity: 0;
+    transform: translateY(-1px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lettering-svg .st {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+.lettering-options[hidden] {
+  display: none;
+}
+.lettering-options .sheet-theme {
+  margin-bottom: 12px;
+}
+.lettering-options .control-label {
+  display: block;
+  margin: 14px 0 7px;
+}
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.choice-row button {
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 8px 11px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.choice-row button.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.thread-palette button.active {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+#downloadLettering {
+  margin-top: 18px;
+}
+
+/* Mockups: simple garment shapes with the lettering placed where it would be stitched. */
+.lettering-mockups {
+  margin-top: 26px;
+}
+.lettering-mockups[hidden] {
+  display: none;
+}
+.mockup-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.mockup {
+  margin: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.mockup figcaption {
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.mockup-art {
+  position: relative;
+  height: 220px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #efe8da;
+}
+.mockup img {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.cap-crown {
+  position: relative;
+  width: 170px;
+  height: 100px;
+  margin-top: 20px;
+  border-radius: 100px 100px 10px 10px;
+  background: #e9dfcb;
+  box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.04);
+}
+.cap-crown img {
+  top: 38px;
+  width: 104px;
+}
+.cap-brim {
+  width: 210px;
+  height: 26px;
+  margin-top: -8px;
+  border-radius: 0 0 100px 100px;
+  background: #d9cdb4;
+}
+.mockup-art:has(.cap-crown) {
+  align-content: center;
+  gap: 0;
+}
+.sweat-body {
+  position: relative;
+  width: 170px;
+  height: 180px;
+  margin-top: 50px;
+  border-radius: 28px 28px 6px 6px;
+  background: #b9c3ae;
+}
+.sweat-body::before,
+.sweat-body::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  width: 44px;
+  height: 130px;
+  border-radius: 20px;
+  background: #b0bba4;
+}
+.sweat-body::before {
+  left: -34px;
+  transform: rotate(12deg);
+}
+.sweat-body::after {
+  right: -34px;
+  transform: rotate(-12deg);
+}
+.sweat-body img {
+  top: 34px;
+  width: 96px;
+}
+.tote-body {
+  position: relative;
+  width: 150px;
+  height: 160px;
+  margin-top: 46px;
+  background: #f6f0e3;
+  border: 1px solid rgba(32, 44, 53, 0.12);
+}
+.tote-body::before {
+  content: "";
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  top: -52px;
+  height: 60px;
+  border: 8px solid #c9b48f;
+  border-bottom: 0;
+  border-radius: 40px 40px 0 0;
+}
+.tote-body img {
+  top: 48px;
+  width: 116px;
+}
+
+@media (max-width: 560px) {
+  .mockup-row {
+    grid-template-columns: 1fr;
+  }
+}
