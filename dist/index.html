@@ -65,12 +65,14 @@
       <div class="studio-grid">
         <div class="capture-card">
           <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
+          <div class="demo-photo-option" id="demoPhotoOption"><img src="assets/demo-pet-reference.jpg" alt="Demo reference photo of a fluffy golden cat"><div><small>Demo reference</small><b>Try the capture flow with this photo</b><span>Good face detail · body partially visible · no scale reference</span></div><button type="button" id="useDemoPhoto">Use demo photo</button></div>
           <div class="photo-chat" id="photoChat">
             <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! <b>One clear photo is enough</b> to start <b class="chat-pet-name">Milo</b>’s profile. A standing full-body photo works best. Add other angles only if you’d like more detail.</p></div>
             <div class="shot-guide"><span><i>1</i>Best first photo</span><span class="optional"><i>＋</i>Face · optional</span><span class="optional"><i>＋</i>Side · optional</span><span class="optional"><i>＋</i>Detail · optional</span></div>
             <div class="photo-tray" id="photoTray"></div>
             <div class="chat-status" id="chatStatus">No photos attached yet</div>
           </div>
+          <div class="capture-assessment" id="captureAssessment" aria-live="polite"><div class="assessment-head"><b>Capture quality</b><span id="captureGrade">Waiting for a photo</span></div><ul id="qualityChecks"><li>Upload a photo to run the first checks.</li></ul></div>
           <div class="message-composer">
             <input type="file" id="petPhotos" accept="image/*" multiple />
             <button class="attach-button" id="attachPhotos" aria-label="Upload pet photos from this device"><span>＋</span> Upload from device</button>
@@ -80,12 +82,15 @@
           <button class="text-button" id="measureToggle" aria-expanded="false">＋ Add measurements for a more precise fit</button>
           <div class="measurements" id="measurements">
             <div class="measurement-head"><div><b>Optional measurements</b><small>Back, chest, and neck are enough for an initial fit profile.</small></div><div class="unit-toggle" role="group" aria-label="Measurement unit"><button class="active" type="button" data-unit="cm">cm</button><button type="button" data-unit="in">in</button></div></div>
-            <label>Back length <span><input class="measurement-input" data-cm="48" type="number" value="48" min="2" max="200" step="0.1"> <i class="measurement-unit">cm</i></span></label>
-            <label>Chest <span><input class="measurement-input" data-cm="62" type="number" value="62" min="2" max="250" step="0.1"> <i class="measurement-unit">cm</i></span></label>
-            <label>Neck <span><input class="measurement-input" data-cm="38" type="number" value="38" min="2" max="150" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label>Back length <span><input class="measurement-input" data-key="back" data-cm="" type="number" placeholder="48" min="2" max="200" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label>Chest <span><input class="measurement-input" data-key="chest" data-cm="" type="number" placeholder="62" min="2" max="250" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label>Neck <span><input class="measurement-input" data-key="neck" data-cm="" type="number" placeholder="38" min="2" max="150" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label class="measurement-confirm"><input id="confirmMeasurements" type="checkbox"> I measured these values with a tape and confirm they are accurate.</label>
           </div>
-          <button class="primary full" id="createTwin">Create pet twin <span>→</span></button>
+          <div class="profile-readiness"><div><span>Visual twin</span><b id="visualReadiness">Needs a photo</b></div><div><span>Fit profile</span><b id="fitReadiness">Photo estimate only</b></div></div>
+          <button class="primary full" id="createTwin">Create prototype twin <span>→</span></button>
           <p class="inline-error" id="twinError" role="alert"></p>
+          <div class="pipeline-state" id="pipelineState" hidden><span class="pipeline-dot"></span><div><b>Visual-twin job prepared</b><small id="pipelineDetail">Demo mode · connect a private 3D provider key to generate a GLB model.</small></div></div>
         </div>
         <div class="twin-card">
           <div class="twin-top"><span>Digital twin preview</span><span class="status-dot pending" id="twinStatus">Waiting for photos</span></div>
