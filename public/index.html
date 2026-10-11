@@ -18,7 +18,7 @@
 <body>
   <header class="nav">
     <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav aria-label="Main navigation"><a data-nav-route="landing" href="#/">Home</a><a data-nav-route="studio" href="#/studio">Pets</a><a data-nav-route="designs" href="#/designs">Designs</a><a data-nav-route="shop" href="#/shop">Shop</a><a data-nav-route="home" href="#/home">Pet space</a></nav>
+    <nav class="workspace-tabs" aria-label="Main workspace" role="tablist"><a id="tab-landing" role="tab" aria-selected="true" data-nav-route="landing" href="#/">Home</a><a id="tab-studio" role="tab" aria-selected="false" data-nav-route="studio" href="#/studio">Pets</a><a id="tab-designs" role="tab" aria-selected="false" data-nav-route="designs" href="#/designs">Designs</a><a id="tab-shop" role="tab" aria-selected="false" data-nav-route="shop" href="#/shop">Shop</a><a id="tab-home" role="tab" aria-selected="false" data-nav-route="home" href="#/home">Pet space</a></nav>
     <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
   </header>
 
@@ -71,6 +71,7 @@
             <div class="shot-guide"><span><i>1</i>Best first photo</span><span class="optional"><i>＋</i>Face · optional</span><span class="optional"><i>＋</i>Side · optional</span><span class="optional"><i>＋</i>Detail · optional</span></div>
             <div class="photo-tray" id="photoTray"></div>
             <div class="chat-status" id="chatStatus">No photos attached yet</div>
+            <div class="storage-status" id="storageStatus" aria-live="polite"><span></span>Private storage activates when you upload. Photos delete automatically after 30 days.</div>
           </div>
           <div class="capture-assessment" id="captureAssessment" aria-live="polite"><div class="assessment-head"><b>Capture quality</b><span id="captureGrade">Waiting for a photo</span></div><ul id="qualityChecks"><li>Upload a photo to run the first checks.</li></ul></div>
           <div class="message-composer">

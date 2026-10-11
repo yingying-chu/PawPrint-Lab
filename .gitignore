@@ -1,3 +1,12 @@
 .env
 .env.*
 .arcade-api/
+/node_modules
+/.next/
+/.vinext/
+/dist/
+/.wrangler/
+/.sites-runtime/
+/coverage
+npm-debug.log*
+next-env.d.ts

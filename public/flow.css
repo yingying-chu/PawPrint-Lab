@@ -5,10 +5,16 @@
 /* Persistent route navigation */
 html,body{overflow-x:clip}
 .nav{position:sticky;top:0;z-index:30}
-.nav>nav{align-items:center}
-.nav>nav a{position:relative;padding:8px 0;white-space:nowrap}
-.nav>nav a.active{color:var(--clay)}
-.nav>nav a.active:after{content:"";position:absolute;left:0;right:0;bottom:0;border-bottom:2px solid var(--clay)}
+.nav>.workspace-tabs{align-items:center;display:flex;gap:3px;padding:4px;border:1px solid rgba(32,44,53,.2);border-radius:999px;background:#f3ede3;box-shadow:inset 0 1px rgba(255,255,255,.8)}
+.nav>.workspace-tabs a{position:relative;padding:9px 15px;white-space:nowrap;border-radius:999px;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.02em;color:var(--ink);transition:background .18s,color .18s,box-shadow .18s}
+.nav>.workspace-tabs a.active{background:var(--ink);color:#fff;box-shadow:0 3px 10px rgba(32,44,53,.18)}
+.nav>.workspace-tabs a.active:after{display:none}
+.nav>.workspace-tabs a:focus-visible{outline:3px solid rgba(232,110,67,.28);outline-offset:2px}
+.storage-status{display:flex;gap:8px;align-items:center;padding:9px 12px;border:1px solid #c8d8c2;border-top:0;background:#f1f6ef;color:#466044;font-size:9px;line-height:1.4}
+.storage-status span{width:8px;height:8px;border-radius:50%;background:#6d8a65;flex:none}
+.storage-status.saving span{animation:storage-pulse .8s infinite alternate;background:var(--butter)}
+.storage-status.error{border-color:#e3b5a7;background:#fff2ed;color:#8b4636}.storage-status.error span{background:var(--clay)}
+@keyframes storage-pulse{to{opacity:.35;transform:scale(.72)}}
 
 /* Pet setup hierarchy */
 .pet-setup-panel{background:#f5f0e6;border:1px solid var(--line);padding:24px;margin-bottom:24px}
@@ -69,10 +75,9 @@ html,body{overflow-x:clip}
   .nav>.brand{grid-area:brand}
   .nav>.bag{grid-area:bag}
   .nav>.pdp-back{grid-area:bag;justify-self:end}
-  .nav>nav{grid-area:routes;display:flex!important;width:100%;gap:0;overflow-x:auto;scrollbar-width:none}
+  .nav>.workspace-tabs{grid-area:routes;display:flex!important;width:100%;gap:3px;overflow-x:auto;scrollbar-width:none;border-radius:12px;padding:4px}
   .nav>nav::-webkit-scrollbar{display:none}
-  .nav>nav a{padding:10px 0 13px;margin-right:26px;font-size:11px}
-  .nav a[data-nav-route].active:after{bottom:7px}
+  .nav>.workspace-tabs a{padding:10px 15px;margin:0;font-size:10px;flex:0 0 auto}
   .mobile-workspace-nav{display:none!important}
   .pet-switcher{flex-wrap:nowrap;overflow-x:auto}
   .design-library{margin-top:-12px}
