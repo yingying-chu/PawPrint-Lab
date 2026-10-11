@@ -322,7 +322,7 @@ function productCard(product, { featured = false } = {}) {
     <a class="product-tile" style="--tint:${product.tint}" href="#/product/${product.slug}" aria-label="${escapeHtml(product.name)} details">
       <span class="tile-name">${featured ? escapeHtml(product.name) : escapeHtml(name)}</span>
       <span class="tile-shot">product shot · ${escapeHtml(product.name.toLowerCase())}</span>
-      ${product.badge ? `<span class="tile-badge">${escapeHtml(product.badge)}</span>` : ""}
+      ${featured ? (product.badge ? `<span class="tile-badge">${escapeHtml(product.badge)}</span>` : "") : '<span class="tile-badge concept">Concept</span>'}
       <span class="tile-view">View details →</span>
     </a>
     <a class="product-meta" href="#/product/${product.slug}"><span><strong>${escapeHtml(product.name)}</strong><small>${escapeHtml(product.sub)}</small></span><b>${money(product.price)}</b></a>
@@ -381,18 +381,27 @@ function renderShop() {
   $("#shopChips").innerHTML = chips
     .map(([key, label]) => `<button type="button" class="chip ${key === activeChip ? "active" : ""}" data-chip="${key}">${label}</button>`)
     .join("");
-  const list = PRODUCTS.filter(
-    (p) => p.audience === view && (view === "owner" || state.shopFilter === "all" || p.cat === state.shopFilter),
-  );
-  $("#shopCount").textContent = `${list.length} piece${list.length === 1 ? "" : "s"}`;
-  $("#shopGrid").innerHTML = list.map((p) => productCard(p)).join("");
+  renderShopGrid();
   const design = (activePet().arcadeDesigns || []).find((d) => d.id === state.shopDesignId && d.status === "succeeded");
   $("#appliedBanner").hidden = !design;
   if (design) $("#appliedBanner").innerHTML = `<span>Showing every piece in <b>${escapeHtml(design.name)}</b>, sized for ${escapeHtml(name)}.</span>`;
-  $("#arcadePanel").dataset.audience = view;
-  $("#arcadeTitle").innerHTML =
-    view === "pet" ? `Real pieces in ${escapeHtml(name.toUpperCase())}’s pattern` : "Their pattern, made for you";
   renderArcadeShop();
+}
+// Pet filters map onto Arcade use cases (wear and walk are both "out").
+const FILTER_USE_CASES = { rest: ["sleep"], wear: ["out"], walk: ["out"], dine: ["dine"] };
+/** Arcade pieces first (real, orderable), then concept pieces, for the current view and filter. */
+function renderShopGrid() {
+  const view = state.shopView,
+    filter = view === "pet" ? state.shopFilter : "all";
+  const concepts = PRODUCTS.filter((p) => p.audience === view && (filter === "all" || p.cat === filter));
+  const design = arcade.signedIn && arcade.configured ? shopDesign() : null;
+  const arcadeItems = (arcade.catalog || []).filter(
+    (item) => item.audience === view && (filter === "all" || FILTER_USE_CASES[filter]?.includes(item.useCase)),
+  );
+  const total = arcadeItems.length + concepts.length;
+  $("#shopCount").textContent = `${total} piece${total === 1 ? "" : "s"}`;
+  $("#shopGrid").innerHTML =
+    arcadeItems.map((item) => arcadeProductCard(item, design)).join("") + concepts.map((p) => productCard(p)).join("");
 }
 $("#shopChips").addEventListener("click", (e) => {
   const chip = e.target.closest("[data-chip]");
@@ -748,7 +757,7 @@ $("#petPhotos").addEventListener("change", async (e) => {
 });
 const DEMO_PHOTO_URL = "assets/whispurr-demo.jpg";
 // Made earlier by Meshy image-to-3D from the demo photo, then simplified for the web.
-const DEMO_TWIN_URL = "assets/whispurr-twin.glb";
+const DEMO_TWIN_URL = "assets/whispurr-twin-storybook.glb";
 $("#useDemoPhoto").addEventListener("click", async () => {
   const pet = activePet();
   if (pet.photos.some((photo) => photo.demo)) return toast("The demo photo is already attached");
@@ -1098,36 +1107,44 @@ function setShopNote(html) {
   $$(".arcade-shop-note").forEach((el) => (el.innerHTML = html));
 }
 async function renderArcadeShop() {
-  const grids = $$(".arcade-shop .arcade-grid");
   if (arcade.signedIn === null) await loadArcadeDesigns();
   try {
     await loadCatalog();
   } catch (error) {
-    grids.forEach((g) => (g.innerHTML = ""));
     return setShopNote(escapeHtml(error.message));
   }
   const design = arcade.signedIn && arcade.configured ? shopDesign() : null;
   if (arcade.signedIn === false)
-    setShopNote(`<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to make these pieces for real with Arcade.`);
+    setShopNote(`<a href="${SIGN_IN_URL}">Sign in</a> to make the Arcade pieces for real in ${escapeHtml(petName(activePet()))}’s pattern.`);
   else if (!arcade.configured) setShopNote("Arcade isn't connected on this site yet, so these pieces can't be made.");
-  else if (!design) setShopNote("Create a pattern in Designs to unlock these printed pieces.");
-  else setShopNote(`Using <b>${escapeHtml(design.name)}</b>. Make a piece, then check out everything that’s ready together.`);
+  else if (!design) setShopNote(`<a href="#/designs">Create a pattern</a> to make the Arcade pieces in ${escapeHtml(petName(activePet()))}’s pattern.`);
+  else setShopNote(`Arcade pieces use <b>${escapeHtml(design.name)}</b>. Make one, then check out everything that’s ready together.`);
   if (design && !arcade.products[design.id]) {
     try {
       const { products } = await api(`/api/arcade-products?designId=${encodeURIComponent(design.id)}`);
       arcade.products[design.id] = products;
       products.filter((p) => p.status === "running").forEach((p) => pollArcadeProduct(design.id, p.id));
     } catch (error) {
-      return setShopNote(escapeHtml(error.message));
+      setShopNote(escapeHtml(error.message));
     }
   }
-  grids.forEach((grid) => {
-    const audience = grid.closest(".arcade-shop").dataset.audience;
-    grid.innerHTML = arcade.catalog
-      .filter((item) => item.audience === audience)
-      .map((item) => arcadeCard(item, design))
-      .join("");
-  });
+  if (state.route === "shop") renderShopGrid();
+}
+/** An Arcade category as a full product card: Arcade's photo, then the made product's mockup and price. */
+function arcadeProductCard(item, design) {
+  const action = arcadeAction(item, design),
+    product = action.product;
+  const image = product?.imageUrl || item.imageUrl;
+  const ready = product?.status === "succeeded";
+  const note = product?.status === "failed" ? product.error || "Arcade couldn't build this" : product?.selectionLabel || item.note;
+  return `<article class="product-card arcade-product-card">
+    <div class="product-tile has-photo" style="--tint:#e6f4ff">
+      ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(product?.title || item.name)}" loading="lazy">` : `<span class="tile-shot">${escapeHtml(item.name.toLowerCase())}</span>`}
+      <span class="tile-badge arcade">${ready ? "Ready to order" : "Made by Arcade"}</span>
+    </div>
+    <div class="product-meta"><span><strong>${escapeHtml(product?.title || item.name)}</strong><small>${escapeHtml(note)}</small></span><b>${product?.unitPrice ? escapeHtml(formatPrice(product.unitPrice)) : '<small class="price-pending">Priced when made</small>'}</b></div>
+    <div class="product-actions">${arcadeButton(action, item, design)}</div>
+  </article>`;
 }
 // Make / ready buttons for Arcade pieces, shared by the shop and the Cubby.
 document.addEventListener("click", (e) => {
@@ -1162,17 +1179,6 @@ function arcadeButton(action, item, design) {
       ? `data-ready-product="${escapeHtml(action.ready)}"`
       : "";
   return `<button type="button" class="${cls}" ${data} ${action.disabled ? "disabled" : ""}>${label}</button>`;
-}
-function arcadeCard(item, design) {
-  const action = arcadeAction(item, design),
-    product = action.product;
-  const image = product?.imageUrl || item.imageUrl;
-  const note = product?.status === "failed" ? product.error || "Arcade couldn't build this" : product?.selectionLabel || item.note;
-  return `<div class="arcade-card">
-    <div class="arcade-card-art">${image ? `<img src="${escapeHtml(image)}" alt="">` : `<span>${escapeHtml(item.name.toLowerCase())}</span>`}</div>
-    <span class="arcade-card-copy"><b>${escapeHtml(product?.title || item.name)}</b><small>${escapeHtml(note)}</small>${product?.unitPrice ? `<em>${escapeHtml(formatPrice(product.unitPrice))}</em>` : ""}</span>
-    ${arcadeButton(action, item, design)}
-  </div>`;
 }
 async function makeArcadeProduct(designId, categoryId) {
   const key = `${designId}|${categoryId}`;

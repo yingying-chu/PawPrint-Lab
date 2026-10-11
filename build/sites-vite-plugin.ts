@@ -12,10 +12,13 @@ const localFullName = "Seedy";
 const localCookieName = "__sites_local_auth";
 const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 const localAddresses = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-// Pawprint demo: a Cloudflare quick tunnel can share the local sign-in, but only
-// with visitors who enter PAWPRINT_DEMO_PASSCODE (set in .env). Off when unset.
+// Pawprint demo: with PAWPRINT_DEMO_OPEN=1 every visitor (localhost or a Cloudflare
+// quick tunnel) uses the shared demo account, so no sign-in is needed. Otherwise only
+// tunnel visitors who enter PAWPRINT_DEMO_PASSCODE are signed in. Both unset: the
+// original local-only sign-in.
 const isTunnelHost = (hostname: string) => hostname.endsWith(".trycloudflare.com");
 const demoPasscode = () => process.env.PAWPRINT_DEMO_PASSCODE?.trim() || "";
+const demoOpen = () => process.env.PAWPRINT_DEMO_OPEN === "1";
 function passcodeMatches(code: string | null) {
   const expected = Buffer.from(demoPasscode());
   const given = Buffer.from(code ?? "");
@@ -23,7 +26,7 @@ function passcodeMatches(code: string | null) {
 }
 function passcodeForm(returnTo: string, wrong: boolean) {
   const escape = (value: string) => value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo sign-in · Pawprint Atelier</title>
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Demo sign-in · Pawprint Lab</title>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fff4e6;color:#1f2440;font:15px system-ui,sans-serif}form{background:#fff8ee;border:2px solid #1f2440;border-radius:24px;padding:28px;width:min(380px,90vw);display:grid;gap:14px}h1{margin:0;font:600 26px Georgia,serif}p{margin:0;color:#474c66;line-height:1.5}input{border:1px solid rgba(31,36,64,.22);border-radius:12px;padding:13px 14px;font-size:15px}button{border:0;border-radius:999px;background:#ff6b3d;color:#fff;font-weight:700;padding:15px;font-size:15px;box-shadow:0 4px 0 #1f2440;cursor:pointer}.wrong{color:#a84428}</style></head>
 <body><form method="get" action="/signin-with-chatgpt"><h1>Demo sign-in</h1><p>Enter the demo passcode to generate designs and save photos. Without it you can still browse the shop.</p>${wrong ? '<p class="wrong">That passcode didn’t match.</p>' : ""}<input name="code" autocomplete="off" placeholder="Passcode" required autofocus><input type="hidden" name="return_to" value="${escape(returnTo)}"><button>Sign in to the demo</button></form></body></html>`;
 }
@@ -88,7 +91,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
           .replace(/^\[|\]$/g, "")
           .toLowerCase();
         // cloudflared forwards tunnel traffic from this machine, so it passes the address check.
-        const demoHost = Boolean(demoPasscode()) && isTunnelHost(hostname);
+        const demoHost = (demoOpen() || Boolean(demoPasscode())) && isTunnelHost(hostname);
         if (
           !(localHosts.has(hostname) || demoHost) ||
           !localAddresses.has(request.socket.remoteAddress ?? "") ||
@@ -124,7 +127,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
         const signIn = url.pathname === "/signin-with-chatgpt";
         const signOut = url.pathname === "/signout-with-chatgpt";
         if (!signIn && !signOut) {
-          if (signInCookies.length === 1 && signInCookies[0] === "1") {
+          if ((signInCookies.length === 1 && signInCookies[0] === "1") || demoOpen()) {
             setHeader(request, "oai-authenticated-user-id", localUserId);
             setHeader(request, "oai-authenticated-user-email", localEmail);
             setHeader(
@@ -174,7 +177,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
           return;
         }
 
-        if (signIn && demoHost && !passcodeMatches(url.searchParams.get("code"))) {
+        if (signIn && demoHost && !demoOpen() && !passcodeMatches(url.searchParams.get("code"))) {
           response.statusCode = 200;
           response.setHeader("Content-Type", "text/html; charset=utf-8");
           response.setHeader("Cache-Control", "private, no-store");

@@ -37,8 +37,10 @@ const localBindingConfig = {
 };
 
 export default defineConfig(async ({ command, mode }) => {
-  // The demo passcode lives in .env; the sign-in middleware reads it from process.env.
-  process.env.PAWPRINT_DEMO_PASSCODE ??= loadEnv(mode, process.cwd(), "PAWPRINT_").PAWPRINT_DEMO_PASSCODE;
+  // Demo access settings live in .env; the sign-in middleware reads them from process.env.
+  const demoEnv = loadEnv(mode, process.cwd(), "PAWPRINT_");
+  process.env.PAWPRINT_DEMO_PASSCODE ??= demoEnv.PAWPRINT_DEMO_PASSCODE;
+  process.env.PAWPRINT_DEMO_OPEN ??= demoEnv.PAWPRINT_DEMO_OPEN;
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
   process.env.WRANGLER_SEND_METRICS ??= "false";

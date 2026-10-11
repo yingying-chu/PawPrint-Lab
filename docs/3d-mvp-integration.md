@@ -1,4 +1,4 @@
-# Pawprint Atelier: 3D MVP integration
+# Pawprint Lab: 3D MVP integration
 
 When `MESHY_API_KEY` is set, creating a twin runs two Meshy steps: image-to-image (nano-banana-pro, background removed) redraws the owner's first saved photo as a cute, toy-like character without harness or leash, then image-to-3D builds a remeshed ~30k-triangle model from that image via `input_task_id`. Job statuses: `styling` → `starting_3d` → `submitted` → `saving` → `ready`. Roughly 9 + 30 credits per twin. `GET /api/twin-jobs/:id` polls the task and copies the finished GLB into private R2 storage, served from `/api/twin-jobs/:id/model`. Sticker generation (`/api/characters`) uses Meshy image-to-image only when the owner opts in to sharing the photo.
 

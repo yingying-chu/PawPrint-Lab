@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pawprint Atelier — Made to belong",
+  title: "Pawprint Lab — Made to belong",
   description: "Create a visual pet twin, calibrate fit, save designs, and customize products.",
 };
 
