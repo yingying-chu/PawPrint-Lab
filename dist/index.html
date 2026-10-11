@@ -12,21 +12,23 @@
   <link rel="stylesheet" href="enhancements.css" />
   <link rel="stylesheet" href="owner-collection.css" />
   <link rel="stylesheet" href="upload-fix.css" />
+  <link rel="stylesheet" href="flow.css" />
+  <style>body:not([data-route]) [data-route]:not([data-route="landing"]){display:none}</style>
 </head>
 <body>
   <header class="nav">
-    <a class="brand" href="#top" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav aria-label="Main navigation"><a href="#studio">Studio</a><a href="#collection">For pets</a><a href="#for-you">For you</a><a href="#home">Pet home</a></nav>
+    <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
+    <nav aria-label="Main navigation"><a data-nav-route="studio" href="#/studio">Pets</a><a data-nav-route="brand" href="#/brand">Brand</a><a data-nav-route="shop" href="#/shop">Shop</a><a data-nav-route="home" href="#/home">Pet home</a></nav>
     <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
   </header>
 
   <main id="top">
-    <section class="hero">
+    <section class="hero" data-route="landing">
       <div class="hero-copy">
         <p class="eyebrow">Made for one very particular pet</p>
         <h1>Nothing off<br>the <em>shelf.</em></h1>
         <p class="lede">Turn a photo into a size-aware digital pet, then make the pieces that fit their body, their personality, and your home.</p>
-        <a class="primary" href="#studio">Meet your pet twin <span>→</span></a>
+        <a class="primary" href="#/studio">Meet your pet twin <span>→</span></a>
         <div class="trust-row"><span>Photo private by default</span><span>Fit checked before making</span></div>
       </div>
       <div class="hero-scene" aria-label="Illustration of a dog in a personalized room">
@@ -39,15 +41,16 @@
       </div>
     </section>
 
-    <section class="process-strip" aria-label="How it works">
+    <section class="process-strip" aria-label="How it works" data-route="landing">
       <div><b>01</b><span><strong>Capture</strong>Your pet + their scale</span></div>
       <div><b>02</b><span><strong>Create</strong>Portraits and patterns</span></div>
       <div><b>03</b><span><strong>Try on</strong>Every detail, in context</span></div>
       <div><b>04</b><span><strong>Make</strong>With vetted partners</span></div>
     </section>
 
-    <section class="studio section" id="studio">
+    <section class="studio section workspace-view" id="studio" data-route="studio">
       <div class="section-head"><div><p class="eyebrow">The fitting room</p><h2>Start with who<br>we’re making for.</h2></div><p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p></div>
+      <div class="flow-progress" aria-label="Pet creation progress"><span class="active"><b>1</b>Pet profile</span><i></i><span><b>2</b>Twin review</span><i></i><span><b>3</b>Choose what’s next</span></div>
       <div class="pet-switcher" id="petSwitcher">
         <button class="pet-chip active" data-pet-id="milo"><span class="pet-avatar">M</span><span><b>Milo</b><small>Active profile</small></span></button>
         <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
@@ -89,11 +92,12 @@
             <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
           </div>
           <div class="twin-bottom"><div><small>FIT PROFILE</small><strong id="fitProfile">Medium · long body</strong></div><button id="adjustFit">Adjust fit</button></div>
+          <div class="twin-next-actions" id="twinNextActions" hidden><div><small>TWIN READY</small><strong>What would you like to do next?</strong></div><a href="#/brand">Create their brand</a><a href="#/shop">Shop products</a></div>
         </div>
       </div>
     </section>
 
-    <section class="portrait section">
+    <section class="portrait section workspace-view" id="brand" data-route="brand">
       <div class="section-head"><div><p class="eyebrow">Pet brand studio</p><h2>Their face,<br>their signature.</h2></div><p>Create a small visual identity from their likeness: portrait mark, name lockup, color palette, and repeat pattern—ready to carry across every product.</p></div>
       <div class="portrait-workbench">
         <div class="portrait-canvas" id="portraitCanvas">
@@ -120,7 +124,9 @@
       </div>
     </section>
 
-    <section class="collection section" id="collection">
+    <section class="shop-router workspace-view" data-route="shop"><div><p class="eyebrow">Shop for both of you</p><h1>Choose who we’re making for.</h1></div><div class="shop-context-tabs" role="tablist" aria-label="Shop collection"><button class="active" data-shop-view="pet">For <span class="name-copy">Milo</span></button><button data-shop-view="owner">For me</button></div></section>
+
+    <section class="collection section workspace-view" id="collection" data-route="shop" data-shop-panel="pet">
       <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Milo</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
       <div class="product-grid">
         <article class="product featured" data-category="rest" data-product="Cloud Bed" data-slug="cloud-bed"><a class="product-link" href="product.html?product=cloud-bed"><div class="product-art bed-art"><div class="mini-bed branded-surface"><span class="name-copy">MILO</span></div><span class="fit-badge">Best fit</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></a><button class="customize-product">Customize</button></article>
@@ -131,7 +137,7 @@
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
     </section>
 
-    <section class="owner-collection section" id="for-you">
+    <section class="owner-collection section workspace-view" id="for-you" data-route="shop" data-shop-panel="owner" hidden>
       <div class="owner-intro">
         <div><p class="eyebrow">For their favorite person</p><h2>Carry a little<br>piece of them.</h2></div>
         <div class="owner-intro-copy"><p>The same portrait mark, name, and pattern—made for the human side of the family. Keep it subtle, make it joyful, or cover the whole thing in their face.</p><div class="owner-mode"><button class="active" data-owner-mode="subtle">Quiet nod</button><button data-owner-mode="portrait">Portrait</button><button data-owner-mode="pattern">Full pattern</button></div></div>
@@ -146,7 +152,7 @@
       <p class="catalog-note">These owner products are concept categories for specialist production partners. Arcade-generated patterns can supply print-ready surface artwork where a compatible product or fabric workflow exists.</p>
     </section>
 
-    <section class="pet-home section" id="home">
+    <section class="pet-home section workspace-view" id="home" data-route="home">
       <div class="home-copy"><p class="eyebrow">Their little world</p><h2>Try it all on.<br>Then make it home.</h2><p>See every piece on your pet and in their space before anything is made. Save combinations, swap patterns, and build a room that feels like theirs.</p><div class="home-tabs"><button class="active" data-room="sleep">Sleep nook</button><button data-room="walk">Walk wall</button><button data-room="dine">Dinner spot</button></div><button class="secondary" id="saveRoom">Save this room <span>♡</span></button></div>
       <div class="room" id="roomScene">
         <div class="room-window"><div></div></div><div class="room-art">GOOD<br>DOG</div><div class="room-hook"><i></i><i></i><i></i></div>
@@ -156,14 +162,16 @@
       </div>
     </section>
 
-    <section class="maker-section section">
+    <section class="maker-section section" data-route="landing">
       <p class="eyebrow">From screen to doorstep</p><h2>Designed by you.<br><em>Made by people we trust.</em></h2>
       <div class="maker-flow"><div><b>01</b><span><strong>Fit review</strong>Measurements checked before production</span></div><div><b>02</b><span><strong>Maker match</strong>Sent to a vetted specialist</span></div><div><b>03</b><span><strong>One checkout</strong>Track every custom piece together</span></div></div>
       <p class="fineprint">No inventory claims are made in this concept. Product availability and maker vetting would be confirmed during partner onboarding.</p>
     </section>
   </main>
 
-  <footer><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
+  <footer data-route="landing"><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
+
+  <nav class="mobile-workspace-nav" aria-label="Workspace navigation"><a data-nav-route="studio" href="#/studio"><span>●</span>Pets</a><a data-nav-route="brand" href="#/brand"><span>✦</span>Brand</a><a data-nav-route="shop" href="#/shop"><span>▦</span>Shop</a><a data-nav-route="home" href="#/home"><span>⌂</span>Home</a></nav>
 
   <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
   <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">MILO</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
