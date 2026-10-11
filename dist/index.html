@@ -18,7 +18,7 @@
 <body>
   <header class="nav">
     <a class="brand" href="#/" aria-label="Pawprint Atelier home"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></a>
-    <nav aria-label="Main navigation"><a data-nav-route="studio" href="#/studio">Pets</a><a data-nav-route="brand" href="#/brand">Brand</a><a data-nav-route="shop" href="#/shop">Shop</a><a data-nav-route="home" href="#/home">Pet home</a></nav>
+    <nav aria-label="Main navigation"><a data-nav-route="landing" href="#/">Home</a><a data-nav-route="studio" href="#/studio">Pets</a><a data-nav-route="designs" href="#/designs">Designs</a><a data-nav-route="shop" href="#/shop">Shop</a><a data-nav-route="home" href="#/home">Pet space</a></nav>
     <button class="bag" id="bagButton" aria-label="Open bag">Bag <span id="bagCount">0</span></button>
   </header>
 
@@ -50,11 +50,18 @@
 
     <section class="studio section workspace-view" id="studio" data-route="studio">
       <div class="section-head"><div><p class="eyebrow">The fitting room</p><h2>Start with who<br>we’re making for.</h2></div><p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p></div>
-      <div class="flow-progress" aria-label="Pet creation progress"><span class="active"><b>1</b>Pet profile</span><i></i><span><b>2</b>Twin review</span><i></i><span><b>3</b>Choose what’s next</span></div>
-      <div class="pet-switcher" id="petSwitcher">
-        <button class="pet-chip active" data-pet-id="milo"><span class="pet-avatar">M</span><span><b>Milo</b><small>Active profile</small></span></button>
-        <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
+      <div class="pet-setup-panel">
+        <div class="pet-basics-heading"><span>1</span><div><b>Pet basics</b><small>Name and type come first. You can switch profiles below at any time.</small></div></div>
+        <div class="form-row pet-basics-form">
+          <label>Pet’s name<input id="petName" value="Milo" maxlength="12" /></label>
+          <label>Pet type<select id="petType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
+        </div>
+        <div class="pet-profiles-row"><span class="pet-profiles-label">Your pet profiles</span><div class="pet-switcher" id="petSwitcher">
+          <button class="pet-chip active" data-pet-id="milo"><span class="pet-avatar">M</span><span><b>Milo</b><small>Active profile</small></span></button>
+          <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
+        </div></div>
       </div>
+      <div class="flow-progress" aria-label="Pet creation progress"><span class="active"><b>1</b>Pet profile</span><i></i><span><b>2</b>Twin review</span><i></i><span><b>3</b>Choose what’s next</span></div>
       <div class="studio-grid">
         <div class="capture-card">
           <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
@@ -70,15 +77,12 @@
             <input id="photoMessage" placeholder="Add a note about their features…" aria-label="Message about your pet" />
             <button class="send-button" id="sendPhotoMessage">Send</button>
           </div>
-          <div class="form-row">
-            <label>Pet’s name<input id="petName" value="Milo" maxlength="12" /></label>
-            <label>Pet type<select id="petType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
-          </div>
           <button class="text-button" id="measureToggle" aria-expanded="false">＋ Add measurements for a more precise fit</button>
           <div class="measurements" id="measurements">
-            <label>Back length <span><input type="number" value="48" min="5" max="150"> cm</span></label>
-            <label>Chest <span><input type="number" value="62" min="5" max="200"> cm</span></label>
-            <label>Neck <span><input type="number" value="38" min="5" max="120"> cm</span></label>
+            <div class="measurement-head"><div><b>Optional measurements</b><small>Back, chest, and neck are enough for an initial fit profile.</small></div><div class="unit-toggle" role="group" aria-label="Measurement unit"><button class="active" type="button" data-unit="cm">cm</button><button type="button" data-unit="in">in</button></div></div>
+            <label>Back length <span><input class="measurement-input" data-cm="48" type="number" value="48" min="2" max="200" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label>Chest <span><input class="measurement-input" data-cm="62" type="number" value="62" min="2" max="250" step="0.1"> <i class="measurement-unit">cm</i></span></label>
+            <label>Neck <span><input class="measurement-input" data-cm="38" type="number" value="38" min="2" max="150" step="0.1"> <i class="measurement-unit">cm</i></span></label>
           </div>
           <button class="primary full" id="createTwin">Create pet twin <span>→</span></button>
           <p class="inline-error" id="twinError" role="alert"></p>
@@ -92,13 +96,14 @@
             <button class="rotate-control" id="rotatePet" aria-label="Rotate pet model">↻ &nbsp; Drag to rotate</button>
           </div>
           <div class="twin-bottom"><div><small>FIT PROFILE</small><strong id="fitProfile">Medium · long body</strong></div><button id="adjustFit">Adjust fit</button></div>
-          <div class="twin-next-actions" id="twinNextActions" hidden><div><small>TWIN READY</small><strong>What would you like to do next?</strong></div><a href="#/brand">Create their brand</a><a href="#/shop">Shop products</a></div>
+          <div class="twin-next-actions" id="twinNextActions" hidden><div><small>TWIN READY</small><strong>What would you like to do next?</strong></div><a href="#/designs">Create a design</a><a href="#/shop">Shop products</a></div>
         </div>
       </div>
     </section>
 
-    <section class="portrait section workspace-view" id="brand" data-route="brand">
-      <div class="section-head"><div><p class="eyebrow">Pet brand studio</p><h2>Their face,<br>their signature.</h2></div><p>Create a small visual identity from their likeness: portrait mark, name lockup, color palette, and repeat pattern—ready to carry across every product.</p></div>
+    <section class="portrait section workspace-view" id="designs" data-route="designs">
+      <div class="section-head"><div><p class="eyebrow">Pet design studio</p><h2>Create a look.<br>Save every version.</h2></div><p>Turn their likeness into portrait marks, name treatments, and repeat patterns. Start new directions, save favorites, then apply one across products.</p></div>
+      <div class="design-library"><div><span class="control-label">Saved designs</span><div class="saved-designs" id="savedDesigns"><span class="empty-design">No saved designs yet</span></div></div><button class="secondary" id="newDesign">＋ New design</button></div>
       <div class="portrait-workbench">
         <div class="portrait-canvas" id="portraitCanvas">
           <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
@@ -107,8 +112,8 @@
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
-          <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Brand direction</span><span>3 · Apply</span></div>
-          <p class="control-label">Choose a brand direction</p>
+          <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
+          <p class="control-label">Choose a design direction</p>
           <div class="style-picker" role="radiogroup">
             <button class="style active" data-style="storybook"><span>〽</span>Storybook</button>
             <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
@@ -116,10 +121,10 @@
           </div>
           <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <button class="primary full" id="generatePattern">Build brand kit <span>✦</span></button>
+          <button class="primary full" id="generatePattern">Save this design <span>✦</span></button>
           <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
-          <button class="secondary full apply-brand" id="applyBrand" disabled>Apply brand to collection <span>→</span></button>
-          <p class="arcade-note">Arcade can generate and refine the repeat pattern. The portrait mark and fit profile remain separate layers so products can use either—or both.</p>
+          <button class="secondary full apply-brand" id="applyBrand" disabled>Apply design to collection <span>→</span></button>
+          <p class="arcade-note">Arcade can generate and refine the repeat pattern. Portrait and fit remain separate layers so each saved design can be reused across compatible products.</p>
         </div>
       </div>
     </section>
@@ -170,8 +175,6 @@
   </main>
 
   <footer data-route="landing"><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
-
-  <nav class="mobile-workspace-nav" aria-label="Workspace navigation"><a data-nav-route="studio" href="#/studio"><span>●</span>Pets</a><a data-nav-route="brand" href="#/brand"><span>✦</span>Brand</a><a data-nav-route="shop" href="#/shop"><span>▦</span>Shop</a><a data-nav-route="home" href="#/home"><span>⌂</span>Home</a></nav>
 
   <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
   <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">MILO</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
