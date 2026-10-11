@@ -35,6 +35,13 @@ const state = {
   measureUnit: "cm",
 };
 const activePet = () => state.pets.find((p) => p.id === state.activePetId);
+const petName = (pet) => pet.name.trim() || "Your pet";
+const escapeHtml = (value) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+const SIGN_IN_URL = `/signin-with-chatgpt?return_to=${encodeURIComponent("/index.html#/studio")}`;
 const safeId = (name) =>
   `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36).slice(-4)}`;
 const routeAliases = {
@@ -117,7 +124,7 @@ function renderSavedDesigns() {
     ? designs
         .map(
           (d, i) =>
-            `<button type="button" data-design-index="${i}"><span>✦</span>${d.name}</button>`,
+            `<button type="button" data-design-index="${i}"><span>✦</span>${escapeHtml(d.name)}</button>`,
         )
         .join("")
     : '<span class="empty-design">No saved designs yet</span>';
@@ -134,12 +141,12 @@ function renderSavedDesigns() {
 }
 function syncPetUI() {
   const pet = activePet(),
-    name = pet.name || "Your pet",
+    name = petName(pet),
     initial = name[0].toUpperCase();
   pet.designs = pet.designs || [];
   pet.measurements = pet.measurements || emptyMeasurements();
   state.measureUnit = pet.measurements.unit || "cm";
-  $("#petName").value = name;
+  if ($("#petName").value !== pet.name) $("#petName").value = pet.name;
   $("#petType").value = pet.type;
   $$(".name-copy").forEach((x) => (x.textContent = name.toUpperCase()));
   $$(".chat-pet-name").forEach((x) => (x.textContent = name));
@@ -188,12 +195,12 @@ function renderPetSwitcher() {
     const b = document.createElement("button");
     b.className = `pet-chip ${p.id === state.activePetId ? "active" : ""}`;
     b.dataset.petId = p.id;
-    b.innerHTML = `<span class="pet-avatar">${p.name[0].toUpperCase()}</span><span><b>${p.name}</b><small>${p.id === state.activePetId ? "Active profile" : p.type}</small></span>`;
+    b.innerHTML = `<span class="pet-avatar">${escapeHtml(petName(p)[0].toUpperCase())}</span><span><b>${escapeHtml(petName(p))}</b><small>${p.id === state.activePetId ? "Active profile" : p.type}</small></span>`;
     b.addEventListener("click", () => {
       state.activePetId = p.id;
       state.brandReady = false;
       syncPetUI();
-      toast(`Now designing for ${p.name}`);
+      toast(`Now designing for ${petName(p)}`);
     });
     wrap.insertBefore(b, $("#addPet"));
   });
@@ -231,7 +238,7 @@ $("#petForm").addEventListener("submit", (e) => {
   toast(`${name} has a new profile`);
 });
 $("#petName").addEventListener("input", (e) => {
-  activePet().name = e.target.value || "Your pet";
+  activePet().name = e.target.value;
   syncPetUI();
 });
 $("#petType").addEventListener(
@@ -308,11 +315,11 @@ const setStorageStatus = (message, tone = "") => {
   el.innerHTML = `<span></span>${message}`;
 };
 async function savePrivatePhoto(file, photo, pet) {
-  setStorageStatus(`Saving ${file.name} privately…`, "saving");
+  setStorageStatus(`Saving ${escapeHtml(file.name)} privately…`, "saving");
   const form = new FormData();
   form.append("file", file);
   form.append("petId", pet.id);
-  form.append("petName", pet.name);
+  form.append("petName", petName(pet));
   form.append("petType", pet.type);
   try {
     const response = await fetch("/api/uploads", {
@@ -320,10 +327,23 @@ async function savePrivatePhoto(file, photo, pet) {
       body: form,
     });
     const payload = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      photo.status = "local-only";
+      setStorageStatus(
+        `<a href="${SIGN_IN_URL}">Sign in with ChatGPT</a> to save photos privately. This preview stays on this device only.`,
+        "error",
+      );
+      return false;
+    }
     if (!response.ok) throw new Error(payload.error || "Private upload failed");
     photo.id = payload.photo.id;
     photo.deleteAfter = payload.photo.deleteAfter;
     photo.status = "stored";
+    if (photo.removed) {
+      // Removed from the tray while the upload was in flight.
+      await deletePrivatePhoto(photo);
+      return false;
+    }
     const date = new Date(photo.deleteAfter).toLocaleDateString(undefined, {
       month: "short",
       day: "numeric",
@@ -334,7 +354,7 @@ async function savePrivatePhoto(file, photo, pet) {
   } catch (error) {
     photo.status = "local-only";
     setStorageStatus(
-      `${error.message}. Preview remains on this device only.`,
+      `${escapeHtml(error.message)}. Preview remains on this device only.`,
       "error",
     );
     return false;
@@ -399,6 +419,7 @@ function addPhotoCard(photo) {
   item.className = "photo-thumb";
   item.innerHTML = `<img alt="${photo.demo ? "Demo pet reference" : "Pet reference photo"}" src="${photo.url}"><button aria-label="Remove photo">×</button>`;
   item.querySelector("button").addEventListener("click", async () => {
+    photo.removed = true;
     await deletePrivatePhoto(photo);
     activePet().photos = activePet().photos.filter((x) => x !== photo);
     item.remove();
@@ -547,8 +568,8 @@ $("#createTwin").addEventListener("click", async (e) => {
   $$(".flow-progress span").forEach((x) => x.classList.add("active"));
   toast(
     jobStatus === "submitted"
-      ? `${pet.name}'s 3D job was submitted`
-      : `${pet.name}'s prototype twin is prepared`,
+      ? `${petName(pet)}'s 3D job was submitted`
+      : `${petName(pet)}'s prototype twin is prepared`,
   );
 });
 $("#rotatePet").addEventListener("click", () =>
@@ -591,7 +612,7 @@ $("#newDesign").addEventListener("click", () => {
   $("#applyBrand").disabled = true;
   $("#generatePattern").innerHTML = "Save this design <span>✦</span>";
   $("#patternPrompt").value =
-    `A fresh design inspired by ${activePet().name}, playful shapes and warm colors.`;
+    `A fresh design inspired by ${petName(activePet())}, playful shapes and warm colors.`;
   $$(".style").forEach((x, i) => x.classList.toggle("active", i === 0));
   toast("New design canvas ready");
 });
@@ -624,7 +645,7 @@ $("#generatePattern").addEventListener("click", async (e) => {
   btn.disabled = false;
   btn.innerHTML = "Design saved <span>✓</span>";
   renderSavedDesigns();
-  toast(`${design.name} saved for ${activePet().name}`);
+  toast(`${design.name} saved for ${petName(activePet())}`);
 });
 $("#applyBrand").addEventListener("click", () => {
   $$(".branded-surface").forEach((x) => x.classList.add("brand-applied"));
@@ -653,7 +674,7 @@ $$(".customize-product").forEach((btn) =>
       ? "&context=owner"
       : "";
     $("#pdpLink").href =
-      `product.html?product=${selectedProduct.dataset.slug}&pet=${encodeURIComponent(activePet().name)}${context}`;
+      `product.html?product=${selectedProduct.dataset.slug}&pet=${encodeURIComponent(petName(activePet()))}${context}`;
     $("#customizer").classList.add("open");
     $("#customizer").setAttribute("aria-hidden", "false");
   }),
@@ -678,7 +699,7 @@ $("#saveCustomization").addEventListener("click", () => {
   state.bag++;
   $("#bagCount").textContent = state.bag;
   toast(
-    `${selectedProduct.dataset.product} customized for ${activePet().name}`,
+    `${selectedProduct.dataset.product} customized for ${petName(activePet())}`,
   );
 });
 $$(".owner-mode button").forEach((btn) =>
@@ -703,7 +724,7 @@ $$(".home-tabs button").forEach((btn) =>
 );
 $("#saveRoom").addEventListener("click", (e) => {
   e.currentTarget.innerHTML = "Room saved <span>♥</span>";
-  toast(`Saved to ${activePet().name}'s home`);
+  toast(`Saved to ${petName(activePet())}'s home`);
 });
 $("#bagButton").addEventListener("click", () =>
   toast(
