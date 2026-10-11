@@ -415,8 +415,8 @@
   cursor: pointer;
 }
 .sheet-sources button img {
-  width: 26px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 .sheet-sources button.active {
@@ -446,4 +446,17 @@
   .sticker-card.sheet {
     grid-column: auto;
   }
+}
+
+/* Controls belong to specific studio modes; class display rules would otherwise beat [hidden]. */
+[data-modes][hidden] {
+  display: none !important;
+}
+.sheet-theme + .sheet-theme {
+  margin-top: 12px;
+}
+.sheet-theme small {
+  text-transform: none;
+  letter-spacing: 0;
+  color: #66706c;
 }

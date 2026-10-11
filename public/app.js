@@ -702,7 +702,8 @@ $("#generatePattern").addEventListener("click", async (e) => {
   const pet = activePet(),
     btn = e.currentTarget;
   if (state.designMode !== "pattern") return generateMeshyImage(btn);
-  if (!pet.twinReady) {
+  // A chosen character already carries the likeness, so only plain patterns need the twin.
+  if (!pet.twinReady && !state.patternCharacterId) {
     toast("Create the pet twin first so the design keeps their likeness");
     location.hash = "#/studio";
     return;
@@ -736,10 +737,12 @@ $("#generatePattern").addEventListener("click", async (e) => {
       },
     });
     pet.arcadeDesigns = [design, ...(pet.arcadeDesigns || [])];
+    if (state.pendingProduct && !state.pendingProduct.designId) state.pendingProduct.designId = design.id;
     state.activeDesignId = design.id;
     renderSavedDesigns();
     await pollArcadeDesign(pet, design.id);
   } catch (error) {
+    state.pendingProduct = null;
     if (error.status === 401) {
       arcade.signedIn = false;
       return saveLocalPreviewDesign(btn, `<a href="${SIGN_IN_URL}">sign in</a> to generate with Arcade.`);
@@ -931,6 +934,7 @@ async function pollArcadeDesign(pet, designId) {
           setArcadeStatus(`${escapeHtml(design.name)} is ready. Apply it to make real products.`, "ok");
           toast(`${design.name} is ready`);
         }
+        if (state.pendingProduct?.designId === design.id) finishPendingProduct(design);
       }
       return;
     }
@@ -1089,8 +1093,18 @@ const DESIGN_NOTES = {
     "Meshy draws the character as a transparent PNG in about a minute. It joins the gallery below, ready to become stickers or a pattern.",
   sheet: "Meshy draws nine hand-drawn stickers of the chosen character on one transparent sheet, in about a minute.",
 };
+// Each mode keeps its own description, so pattern text never leaks into a character prompt.
+state.promptByMode = {
+  pattern: $("#patternPrompt").value,
+  character: "Big round eyes, sitting proudly, extra fluffy tail.",
+};
+const PROMPT_LABELS = { pattern: "Or make it yours", character: "Describe their character" };
 function setDesignMode(mode) {
+  if (state.designMode in state.promptByMode) state.promptByMode[state.designMode] = $("#patternPrompt").value;
   state.designMode = mode;
+  $$("[data-modes]").forEach((el) => (el.hidden = !el.dataset.modes.split(" ").includes(mode)));
+  if (mode in state.promptByMode) $("#patternPrompt").value = state.promptByMode[mode];
+  $("#promptLabel").textContent = PROMPT_LABELS[mode] || "";
   $$("[data-design-mode]").forEach((btn) => {
     const active = btn.dataset.designMode === mode;
     btn.classList.toggle("active", active);
@@ -1170,7 +1184,7 @@ function galleryCard(asset) {
     : "Their own character";
   const actions = sheet
     ? `<a href="${escapeHtml(asset.imageUrl)}?download=1">Download sheet</a>`
-    : `<a href="${escapeHtml(asset.imageUrl)}?download=1">Download</a><button type="button" data-make-sheet="${escapeHtml(asset.id)}">Make stickers</button><button type="button" data-use-character="${escapeHtml(asset.id)}">Use in a pattern</button>`;
+    : `<a href="${escapeHtml(asset.imageUrl)}?download=1">Download</a><button type="button" data-make-sheet="${escapeHtml(asset.id)}">Make stickers</button><button type="button" data-use-character="${escapeHtml(asset.id)}">Use in a pattern</button><button type="button" data-pillow="${escapeHtml(asset.id)}">Put on a pillow</button>`;
   return `<figure class="${cls}"><div class="sticker-art"><img src="${escapeHtml(asset.imageUrl)}" alt="${escapeHtml(asset.name)}"></div><figcaption><b>${escapeHtml(asset.name)}</b><small>${escapeHtml(note)}</small><span>${actions}</span></figcaption></figure>`;
 }
 function renderStickerPack() {
@@ -1194,7 +1208,43 @@ function renderStickerPack() {
       toast("The next Arcade pattern will be guided by this character");
     }),
   );
+  $$("[data-pillow]").forEach((btn) => btn.addEventListener("click", () => putCharacterOnProduct(btn.dataset.pillow, "Decorative Pillows")));
   if (MESHY_MODES.includes(state.designMode)) renderSheetSources();
+}
+/**
+ * Character -> Arcade product in one step: Arcade generates a pattern with the
+ * character as its motif (it only prints its own patterns), then builds the product.
+ */
+async function putCharacterOnProduct(characterId, categoryName) {
+  const pet = activePet(),
+    character = readyCharacters(pet).find((c) => c.id === characterId);
+  if (!character) return;
+  if (arcade.signedIn === null) await loadArcadeDesigns();
+  if (arcade.signedIn === false) return toast("Sign in with ChatGPT to make products with Arcade");
+  if (arcade.configured === false) return toast("Arcade isn't connected on this site yet");
+  state.patternCharacterId = character.id;
+  state.pendingProduct = { categoryName };
+  setDesignMode("pattern");
+  $("#patternPrompt").value = `${character.name} as the centerpiece on a soft cream background, with scattered tiny stars and paw prints.`;
+  $("#portraitCanvas").scrollIntoView({ behavior: "smooth", block: "start" });
+  toast(`Arcade is designing ${categoryName.toLowerCase()} for ${petName(pet)}`);
+  $("#generatePattern").click();
+}
+async function finishPendingProduct(design) {
+  const { categoryName } = state.pendingProduct;
+  state.pendingProduct = null;
+  if (design.status !== "succeeded") return;
+  try {
+    const category = (await loadCatalog()).find((item) => item.name === categoryName && item.categoryId);
+    if (!category) return toast(`${categoryName} isn't available from Arcade right now`);
+    state.shopDesignId = design.id;
+    state.shopView = category.audience;
+    await makeArcadeProduct(design.id, category.categoryId);
+    location.hash = `#/shop?view=${category.audience}`;
+    toast(`Arcade is making the ${categoryName.toLowerCase().replace(/s$/, "")}`);
+  } catch (error) {
+    toast(error.message);
+  }
 }
 async function generateMeshyImage(btn) {
   const pet = activePet(),
@@ -1209,7 +1259,12 @@ async function generateMeshyImage(btn) {
   if (sheet) {
     const source = readyCharacters(pet).find((c) => c.id === state.sheetSourceId);
     if (!source) return setArcadeStatus("Draw a character first, then make a sticker sheet from it.", "warn");
-    Object.assign(body, { kind: "sticker_sheet", sourceCharacterId: source.id, theme: $("#sheetTheme").value.trim() });
+    Object.assign(body, {
+      kind: "sticker_sheet",
+      sourceCharacterId: source.id,
+      theme: $("#sheetTheme").value.trim(),
+      prompt: $("#sheetNotes").value.trim(),
+    });
   } else {
     const photo = storedPhoto(pet),
       usePhoto = Boolean(photo && $("#usePhotoReference").checked);

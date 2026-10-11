@@ -126,18 +126,18 @@
         </div>
         <div class="portrait-controls">
           <div class="design-mode" role="group" aria-label="What to create"><button type="button" class="active" data-design-mode="pattern" aria-pressed="true">Repeat pattern<small>by Arcade · printed goods</small></button><button type="button" data-design-mode="character" aria-pressed="false">Character<small>by Meshy · their own art</small></button><button type="button" data-design-mode="sheet" aria-pressed="false">Sticker sheet<small>by Meshy · 9 from a character</small></button></div>
-          <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
-          <p class="control-label">Choose a design direction</p>
-          <div class="style-picker" role="radiogroup">
+          <div class="brand-progress" data-modes="pattern"><span class="complete">1 · Likeness</span><span class="active">2 · Design direction</span><span>3 · Save & apply</span></div>
+          <p class="control-label" data-modes="pattern character">Choose a design direction</p>
+          <div class="style-picker" role="radiogroup" data-modes="pattern character">
             <button class="style active" data-style="storybook"><span>〽</span>Storybook</button>
             <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
             <button class="style" data-style="minimal"><span>◯</span>Minimal line</button>
           </div>
-          <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Whispurr, warm clay and butter yellow.</textarea></label>
-          <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <p class="palette-hint">Tap colors to include them in the design.</p>
+          <label class="prompt-label" data-modes="pattern character"><span id="promptLabel">Or make it yours</span><textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Whispurr, warm clay and butter yellow.</textarea></label>
+          <div class="palette" data-modes="pattern character"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
+          <p class="palette-hint" data-modes="pattern character">Tap colors to include them in the design.</p>
           <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Whispurr</b>’s uploaded photo as a reference<small>This shares the photo with <span class="ref-provider">Arcade</span> to guide the <span class="ref-output">pattern</span>.</small></span></label>
-          <div class="sheet-options" id="sheetOptions" hidden><span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div><label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label></div>
+          <div class="sheet-options" id="sheetOptions" hidden><span class="control-label">Made from</span><div class="sheet-sources" id="sheetSources"></div><label class="sheet-theme">Remix with<input id="sheetTheme" value="🫠 🍪 💪 🪩" maxlength="120" placeholder="Emoji or a theme, e.g. 🎂 birthday party"></label><label class="sheet-theme">Extra notes <small>optional</small><input id="sheetNotes" maxlength="300" placeholder="e.g. include a sleepy one and a birthday one"></label></div>
           <div class="pattern-reference" id="patternReference" hidden><img alt=""><span>Guided by <b></b></span><button type="button" aria-label="Stop using this character as a reference">×</button></div>
           <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
           <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>

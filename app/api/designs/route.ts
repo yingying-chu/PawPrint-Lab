@@ -139,7 +139,13 @@ export async function POST(request: Request) {
   try {
     const job = await createPattern({
       requestId: `design-${id}`,
-      prompt: buildPrompt({ petName, petType: String(body.petType ?? ""), style, prompt: userPrompt }),
+      prompt: buildPrompt({
+        petName,
+        petType: String(body.petType ?? ""),
+        style,
+        prompt: userPrompt,
+        fromCharacter: Boolean(body.characterId),
+      }),
       referenceIds,
       colors,
     });

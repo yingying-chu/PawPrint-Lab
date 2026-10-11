@@ -12,13 +12,24 @@ export const DESIGN_STYLES: Record<string, string> = {
   minimal: "minimal single-weight line drawing",
 };
 
-export function buildPrompt(input: { petName: string; petType: string; style: string; prompt: string }) {
+export function buildPrompt(input: {
+  petName: string;
+  petType: string;
+  style: string;
+  prompt: string;
+  fromCharacter?: boolean;
+}) {
   const subject = input.petType && input.petType !== "Other" ? input.petType.toLowerCase() : "pet";
   return [
     `A repeating textile pattern celebrating a ${subject} named ${input.petName}.`,
+    // Arcade only prints its own patterns, so a character reference has to become the motif.
+    input.fromCharacter
+      ? `Feature the character from the reference image as the main motif, large and clearly recognisable, keeping its face, coat colours and proportions.`
+      : "",
     `Style: ${DESIGN_STYLES[input.style] ?? DESIGN_STYLES.storybook}.`,
+    "No text, letters or logos.",
     input.prompt,
-  ].join(" ").slice(0, 1000);
+  ].filter(Boolean).join(" ").slice(0, 1000);
 }
 
 export function errorMessage(error: unknown, fallback: string) {

@@ -7,6 +7,7 @@ import {
   CHARACTER_STYLES,
   buildCharacterPrompt,
   buildStickerSheetPrompt,
+  characterName,
   refreshCharacter,
   serializeCharacter,
 } from "@/lib/characters";
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
       removeBackground: true,
       model: kind === "sticker_sheet" ? "gpt-image-2-5-flare" : "nano-banana-2",
     });
-    const existing = await db.select({ id: petAssets.id }).from(petAssets)
+    const existing = await db.select({ name: petAssets.name }).from(petAssets)
       .where(and(eq(petAssets.userId, user.userId), eq(petAssets.petKey, petKey), eq(petAssets.kind, kind)));
     const now = new Date().toISOString();
     const row = {
@@ -112,7 +113,9 @@ export async function POST(request: Request) {
       petKey,
       petName,
       kind,
-      name: `${kind === "sticker_sheet" ? "Sticker sheet" : "Character"} ${existing.length + 1}`,
+      name: kind === "sticker_sheet"
+        ? `Sticker sheet ${existing.length + 1}`
+        : characterName(style, petName, existing.map((row) => row.name)),
       prompt: kind === "sticker_sheet" ? theme : userPrompt,
       style,
       photoId,

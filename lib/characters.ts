@@ -15,6 +15,15 @@ export const CHARACTER_STYLES: Record<string, string> = {
   minimal: "minimal clean line art with a few flat colors",
 };
 
+/** "Storybook Whispurr", or "Storybook Whispurr 2" when that name is taken. */
+export function characterName(style: string, petName: string, takenNames: string[]) {
+  const label = { storybook: "Storybook", cutout: "Paper-cut", minimal: "Minimal" }[style] ?? "Storybook";
+  const base = `${label} ${petName}`;
+  let name = base;
+  for (let n = 2; takenNames.includes(name); n++) name = `${base} ${n}`;
+  return name;
+}
+
 const subjectOf = (petType: string) => (petType && petType !== "Other" ? petType.toLowerCase() : "pet");
 
 // Photos often show branded harnesses or collars; keep trademarks off printable art.
