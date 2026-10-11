@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="owner-collection.css" />
   <link rel="stylesheet" href="upload-fix.css" />
   <link rel="stylesheet" href="flow.css" />
+  <link rel="stylesheet" href="arcade.css" />
   <style>body:not([data-route]) [data-route]:not([data-route="landing"]){display:none}</style>
 </head>
 <body>
@@ -115,6 +116,7 @@
           <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
           <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
           <div class="portrait-name" id="portraitName">MILO</div>
+          <img class="arcade-pattern" id="arcadePattern" alt="" hidden>
           <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
@@ -127,10 +129,13 @@
           </div>
           <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <button class="primary full" id="generatePattern">Save this design <span>✦</span></button>
+          <p class="palette-hint">Tap colors to include them in the pattern.</p>
+          <label class="arcade-reference" id="arcadeReference" hidden><input type="checkbox" id="usePhotoReference"><span>Use <b class="chat-pet-name">Milo</b>’s uploaded photo as a reference<small>This shares the photo with Arcade to guide the pattern.</small></span></label>
+          <button class="primary full" id="generatePattern">Generate with Arcade <span>✦</span></button>
+          <p class="arcade-status" id="arcadeStatus" aria-live="polite"></p>
           <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
           <button class="secondary full apply-brand" id="applyBrand" disabled>Apply design to collection <span>→</span></button>
-          <p class="arcade-note">Arcade can generate and refine the repeat pattern. Portrait and fit remain separate layers so each saved design can be reused across compatible products.</p>
+          <p class="arcade-note">Arcade generates the repeat pattern, usually in 1–2 minutes. Each saved design can be made into real Arcade products from the shop.</p>
         </div>
       </div>
     </section>
@@ -145,6 +150,7 @@
         <article class="product" data-category="walk" data-product="Everyday Harness" data-slug="everyday-harness"><a class="product-link" href="product.html?product=everyday-harness"><div class="product-art harness-art"><div class="harness-shape branded-surface"><i></i><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></a><button class="customize-product">Customize</button></article>
         <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
       </div>
+      <div class="arcade-shop" data-audience="pet"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Real pieces in <span class="name-copy">MILO</span>’s pattern</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
     </section>
 
@@ -159,6 +165,7 @@
         <article class="product owner-product" data-product="Portrait Market Tote" data-slug="market-tote"><a class="product-link" href="product.html?product=market-tote"><div class="owner-product-art tote-art"><div class="tote branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="maker-badge arcade-badge">Pattern-ready</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Market Tote</strong><small>Heavy canvas · printed or embroidered</small></span><b>$46</b></div></a><button class="customize-product">Customize</button></article>
         <article class="product owner-product" data-product="Pocket Portrait Case" data-slug="phone-case"><a class="product-link" href="product.html?product=phone-case"><div class="owner-product-art case-art"><div class="phone-case branded-surface"><i></i><span class="owner-mark">M</span><b class="name-copy">MILO</b></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Pocket Portrait Case</strong><small>Protective shell · matte finish</small></span><b>$34</b></div></a><button class="customize-product">Customize</button></article>
       </div>
+      <div class="arcade-shop" data-audience="owner"><div class="arcade-shop-head"><div><p class="eyebrow">Made with Arcade</p><h3>Their pattern, made for you</h3></div><p class="arcade-shop-note"></p></div><div class="arcade-grid"></div></div>
       <div class="owner-ideas"><span>Next up</span><button>Keychains</button><button>Sweatshirts</button><button>Travel mugs</button><button>Notebook covers</button><button>Gift wrap</button></div>
       <p class="catalog-note">These owner products are concept categories for specialist production partners. Arcade-generated patterns can supply print-ready surface artwork where a compatible product or fabric workflow exists.</p>
     </section>
