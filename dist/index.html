@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="enhancements.css" />
 </head>
 <body>
   <header class="nav">
@@ -45,13 +46,25 @@
 
     <section class="studio section" id="studio">
       <div class="section-head"><div><p class="eyebrow">The fitting room</p><h2>Start with who<br>we’re making for.</h2></div><p>One clear photo gets us the likeness. A familiar object—or a few optional measurements—helps us understand real-world scale.</p></div>
+      <div class="pet-switcher" id="petSwitcher">
+        <button class="pet-chip active" data-pet-id="milo"><span class="pet-avatar">M</span><span><b>Milo</b><small>Active profile</small></span></button>
+        <button class="add-pet-chip" id="addPet">＋ Add another pet</button>
+      </div>
       <div class="studio-grid">
         <div class="capture-card">
-          <div class="step-label">Step 1 of 3 <span>Pet profile</span></div>
-          <label class="upload-zone" for="petPhoto">
-            <input type="file" id="petPhoto" accept="image/*" capture="environment" />
-            <div class="upload-preview" id="uploadPreview"><div class="camera-icon">⌁</div><strong>Add a full-body photo</strong><span>Standing, side-on works beautifully</span></div>
-          </label>
+          <div class="step-label">Step 1 of 3 <span>Photo conversation</span></div>
+          <div class="photo-chat" id="photoChat">
+            <div class="chat-bubble assistant"><span class="chat-mark">P</span><p>Hi! Send me a few photos of <b class="chat-pet-name">Milo</b>. A standing full-body view helps with shape; a clear face and side view help me catch the details.</p></div>
+            <div class="shot-guide"><span><i>1</i>Whole body</span><span><i>2</i>Face close-up</span><span><i>3</i>Side view</span><span class="optional"><i>＋</i>Favorite detail</span></div>
+            <div class="photo-tray" id="photoTray"></div>
+            <div class="chat-status" id="chatStatus">No photos attached yet</div>
+          </div>
+          <div class="message-composer">
+            <input type="file" id="petPhotos" accept="image/*" multiple />
+            <button class="attach-button" id="attachPhotos" aria-label="Attach pet photos">＋</button>
+            <input id="photoMessage" placeholder="Add a note about their features…" aria-label="Message about your pet" />
+            <button class="send-button" id="sendPhotoMessage">Send</button>
+          </div>
           <div class="form-row">
             <label>Pet’s name<input id="petName" value="Milo" maxlength="12" /></label>
             <label>Pet type<select id="petType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label>
@@ -63,9 +76,10 @@
             <label>Neck <span><input type="number" value="38" min="5" max="120"> cm</span></label>
           </div>
           <button class="primary full" id="createTwin">Create pet twin <span>→</span></button>
+          <p class="inline-error" id="twinError" role="alert"></p>
         </div>
         <div class="twin-card">
-          <div class="twin-top"><span>Digital twin preview</span><span class="status-dot">Size confidence · 92%</span></div>
+          <div class="twin-top"><span>Digital twin preview</span><span class="status-dot pending" id="twinStatus">Waiting for photos</span></div>
           <div class="twin-view">
             <div class="grid-floor"></div>
             <div class="measure-line vertical"><span>53 cm</span></div><div class="measure-line horizontal"><span>71 cm</span></div>
@@ -78,15 +92,17 @@
     </section>
 
     <section class="portrait section">
-      <div class="section-head"><div><p class="eyebrow">Portrait maker</p><h2>Their face,<br>your imagination.</h2></div><p>Choose a direction or describe your own. We turn their portrait into a repeatable motif ready for product surfaces.</p></div>
+      <div class="section-head"><div><p class="eyebrow">Pet brand studio</p><h2>Their face,<br>their signature.</h2></div><p>Create a small visual identity from their likeness: portrait mark, name lockup, color palette, and repeat pattern—ready to carry across every product.</p></div>
       <div class="portrait-workbench">
         <div class="portrait-canvas" id="portraitCanvas">
           <span class="spark s1">✦</span><span class="spark s2">✿</span><span class="spark s3">✦</span>
           <div class="portrait-dog"><i></i><i></i><div><b></b><b></b><span></span></div></div>
           <div class="portrait-name" id="portraitName">MILO</div>
+          <div class="brand-output-tabs"><span class="active">Portrait mark</span><span>Wordmark</span><span>Repeat pattern</span></div>
         </div>
         <div class="portrait-controls">
-          <p class="control-label">Choose an art direction</p>
+          <div class="brand-progress"><span class="complete">1 · Likeness</span><span class="active">2 · Brand direction</span><span>3 · Apply</span></div>
+          <p class="control-label">Choose a brand direction</p>
           <div class="style-picker" role="radiogroup">
             <button class="style active" data-style="storybook"><span>〽</span>Storybook</button>
             <button class="style" data-style="cutout"><span>✂</span>Paper cut</button>
@@ -94,8 +110,10 @@
           </div>
           <label class="prompt-label">Or make it yours<textarea id="patternPrompt">Tiny wildflowers and cheerful stars around Milo, warm clay and butter yellow.</textarea></label>
           <div class="palette"><button data-color="#e86e43" style="--swatch:#e86e43" aria-label="Terracotta"></button><button data-color="#e5b83f" style="--swatch:#e5b83f" aria-label="Butter"></button><button data-color="#657765" style="--swatch:#657765" aria-label="Sage"></button><button data-color="#313949" style="--swatch:#313949" aria-label="Ink"></button><button class="add-color" aria-label="Add color">＋</button></div>
-          <button class="primary full" id="generatePattern">Generate pattern <span>✦</span></button>
-          <p class="arcade-note">Surface pattern creation can be powered by Arcade. Pet likeness remains a separate portrait layer.</p>
+          <button class="primary full" id="generatePattern">Build brand kit <span>✦</span></button>
+          <div class="brand-kit-result" id="brandKitResult"><span>Portrait mark</span><span>Name lockup</span><span>5-color palette</span><span>Repeat tile</span></div>
+          <button class="secondary full apply-brand" id="applyBrand" disabled>Apply brand to collection <span>→</span></button>
+          <p class="arcade-note">Arcade can generate and refine the repeat pattern. The portrait mark and fit profile remain separate layers so products can use either—or both.</p>
         </div>
       </div>
     </section>
@@ -103,10 +121,10 @@
     <section class="collection section" id="collection">
       <div class="section-head"><div><p class="eyebrow">Recommended for <span class="name-copy">Milo</span></p><h2>A collection that<br>already knows them.</h2></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="wear">Wear</button><button data-filter="rest">Rest</button><button data-filter="walk">Walk</button><button data-filter="dine">Dine</button></div></div>
       <div class="product-grid">
-        <article class="product featured" data-category="rest"><div class="product-art bed-art"><div class="mini-bed"><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Cloud bed">＋</button><span class="fit-badge">Best fit</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></article>
-        <article class="product" data-category="wear"><div class="product-art scarf-art"><div class="scarf-shape">M</div><button class="quick-add" data-product="Ribbon scarf">＋</button><span class="maker-badge">Arcade-ready surface</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></article>
-        <article class="product" data-category="walk"><div class="product-art harness-art"><div class="harness-shape"><i></i><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Everyday harness">＋</button></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></article>
-        <article class="product" data-category="dine"><div class="product-art bowl-art"><div class="mini-bowl"><span class="name-copy">MILO</span></div><button class="quick-add" data-product="Portrait bowl">＋</button></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></article>
+        <article class="product featured" data-category="rest" data-product="Cloud Bed" data-slug="cloud-bed"><a class="product-link" href="product.html?product=cloud-bed"><div class="product-art bed-art"><div class="mini-bed branded-surface"><span class="name-copy">MILO</span></div><span class="fit-badge">Best fit</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>The Cloud Bed</strong><small>Washable canvas · embroidered</small></span><b>$128</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="wear" data-product="Ribbon Scarf" data-slug="ribbon-scarf"><a class="product-link" href="product.html?product=ribbon-scarf"><div class="product-art scarf-art"><div class="scarf-shape branded-surface">M</div><span class="maker-badge">Arcade-ready surface</span><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Ribbon Scarf</strong><small>Silk twill · custom print</small></span><b>$42</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="walk" data-product="Everyday Harness" data-slug="everyday-harness"><a class="product-link" href="product.html?product=everyday-harness"><div class="product-art harness-art"><div class="harness-shape branded-surface"><i></i><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Everyday Harness</strong><small>Fit-matched · padded</small></span><b>$68</b></div></a><button class="customize-product">Customize</button></article>
+        <article class="product" data-category="dine" data-product="Portrait Bowl" data-slug="portrait-bowl"><a class="product-link" href="product.html?product=portrait-bowl"><div class="product-art bowl-art"><div class="mini-bowl branded-surface"><span class="name-copy">MILO</span></div><span class="view-product">View details →</span></div><div class="product-info"><span><strong>Portrait Bowl</strong><small>Stoneware · dishwasher safe</small></span><b>$54</b></div></a><button class="customize-product">Customize</button></article>
       </div>
       <p class="catalog-note">Prototype catalog combines Arcade-supported printed goods with future vetted pet-product manufacturing partners.</p>
     </section>
@@ -130,6 +148,8 @@
 
   <footer><div class="brand"><span class="brand-mark">P</span><span>Pawprint<br><em>Atelier</em></span></div><p>Because they’re not standard size.<br>And they’re definitely not standard.</p><span>Concept prototype · 2026</span></footer>
 
+  <div class="modal-backdrop" id="petModal" hidden><form class="pet-modal-card" id="petForm"><button type="button" class="modal-close" id="closePetModal">×</button><p class="eyebrow">New pet profile</p><h3>Who’s joining the family?</h3><label>Name<input id="newPetName" required maxlength="12" placeholder="e.g. Luna"></label><label>Pet type<select id="newPetType"><option>Dog</option><option>Cat</option><option>Rabbit</option><option>Other</option></select></label><button class="primary full" type="submit">Create profile <span>→</span></button></form></div>
+  <aside class="customizer" id="customizer" aria-hidden="true"><button class="customizer-close" id="closeCustomizer">×</button><p class="eyebrow">Quick customizer</p><h3 id="customizerTitle">Cloud Bed</h3><div class="customizer-preview"><div class="customizer-swatch branded-surface"><span class="name-copy">MILO</span></div></div><label>Personalization<select id="personalization"><option>Name + portrait mark</option><option>Name only</option><option>Pattern only</option><option>No personalization</option></select></label><label>Thread / trim<div class="mini-palette"><button type="button" data-color="#d9663f"></button><button type="button" data-color="#e6b83f"></button><button type="button" data-color="#697b67"></button><button type="button" data-color="#202c35"></button></div></label><button class="primary full" id="saveCustomization">Save customization <span>✓</span></button><a id="pdpLink" class="drawer-link" href="product.html">Open product details →</a></aside>
   <div class="toast" id="toast" role="status" aria-live="polite">Added to your room</div>
   <script src="app.js"></script>
 </body>
