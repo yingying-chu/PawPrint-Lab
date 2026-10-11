@@ -757,7 +757,16 @@ $("#petPhotos").addEventListener("change", async (e) => {
 });
 const DEMO_PHOTO_URL = "assets/whispurr-demo.jpg";
 // Made earlier by Meshy image-to-3D from the demo photo, then simplified for the web.
-const DEMO_TWIN_URL = "assets/whispurr-twin-storybook.glb";
+const DEMO_TWIN_URL = "assets/whispurr-twin-storybook-v2.glb";
+const DEMO_PET_ID = "whispurr";
+const demoTwinJob = () => ({ id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true });
+/** The demo pet opens with its photo and the storybook 3D twin already in place. */
+function attachDemoTwin(pet) {
+  if (pet.id !== DEMO_PET_ID) return;
+  if (!pet.photos.length) pet.photos.push({ name: "whispurr-demo.jpg", url: DEMO_PHOTO_URL, size: 0, demo: true, status: "demo" });
+  pet.twinJob = demoTwinJob();
+  pet.twinReady = true;
+}
 $("#useDemoPhoto").addEventListener("click", async () => {
   const pet = activePet();
   if (pet.photos.some((photo) => photo.demo)) return toast("The demo photo is already attached");
@@ -777,6 +786,7 @@ $("#useDemoPhoto").addEventListener("click", async () => {
 function photoStatusText(photo) {
   if (photo.status === "saving") return "Saving privately…";
   if (photo.status === "stored") return `${photo.demo ? "Full body and face visible · " : ""}stored privately for 30 days`;
+  if (photo.status === "demo") return "Demo photo · full body and face visible";
   return "On this device only";
 }
 function renderPhotos() {
@@ -851,14 +861,15 @@ $("#createTwin").addEventListener("click", async () => {
     return;
   }
   const savedPhoto = pet.photos.find((photo) => photo.id);
+  const fromDemo = pet.photos[0]?.demo;
   state.twinCreating = true;
   $("#twinStatus").textContent = "Creating…";
   renderTwinCard();
   try {
-    if (savedPhoto?.demo) {
+    if (fromDemo) {
       // The demo photo already has a Meshy model, so demos don't spend credits.
       await sleep(1200);
-      pet.twinJob = { id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true };
+      pet.twinJob = demoTwinJob();
     } else if (savedPhoto) {
       const { job } = await api("/api/twin-jobs", { method: "POST", body: { petId: pet.id, photoId: savedPhoto.id } });
       pet.twinJob = job;
@@ -1607,7 +1618,7 @@ function showTwinModel(pet) {
   }
   if (slot.dataset.src !== pet.twinJob.modelUrl) {
     slot.dataset.src = pet.twinJob.modelUrl;
-    slot.innerHTML = `<model-viewer src="${escapeHtml(pet.twinJob.modelUrl)}" alt="3D model of ${escapeHtml(petName(pet))}" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y"></model-viewer>`;
+    slot.innerHTML = `<model-viewer src="${escapeHtml(pet.twinJob.modelUrl)}" alt="3D model of ${escapeHtml(petName(pet))}" loading="lazy" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y"></model-viewer>`;
   }
   loadModelViewer().catch(() => {
     slot.innerHTML = '<p class="twin-model-error">The 3D viewer couldn\'t load. Check your connection and refresh.</p>';
@@ -1673,7 +1684,8 @@ async function loadPetMedia() {
       api(`/api/twin-jobs?petKey=${encodeURIComponent(pet.id)}`),
     ]);
     pet.characters = characters;
-    if (job) {
+    // The demo pet keeps its storybook twin; older jobs on the shared demo account are skipped.
+    if (job && !pet.twinJob?.demo) {
       pet.twinJob = job;
       if (job.status === "ready" || TWIN_IN_PROGRESS.includes(job.status)) pet.twinReady = true;
     }
@@ -1683,7 +1695,7 @@ async function loadPetMedia() {
     renderTwinCard();
     if (state.route === "home") renderCubby();
     characters.filter((c) => c.status === "running").forEach((c) => pollCharacter(pet, c.id));
-    if (TWIN_IN_PROGRESS.includes(job?.status)) {
+    if (pet.twinJob === job && TWIN_IN_PROGRESS.includes(job?.status)) {
       showTwinProgress(pet, job);
       pollTwin(pet, job.id);
     }
@@ -1820,7 +1832,7 @@ function renderCubbyPet(pet) {
   }
   if (slot.dataset.src !== pet.twinJob.modelUrl) {
     slot.dataset.src = pet.twinJob.modelUrl;
-    slot.innerHTML = `<model-viewer src="${escapeHtml(pet.twinJob.modelUrl)}" alt="3D model of ${escapeHtml(petName(pet))}" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y"></model-viewer>`;
+    slot.innerHTML = `<model-viewer src="${escapeHtml(pet.twinJob.modelUrl)}" alt="3D model of ${escapeHtml(petName(pet))}" loading="lazy" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y"></model-viewer>`;
   }
   loadModelViewer().catch(() => {
     slot.hidden = true;
@@ -1830,6 +1842,7 @@ function renderCubbyPet(pet) {
 bag.load();
 renderBag();
 renderHome();
+attachDemoTwin(activePet());
 syncPetUI();
 renderRoute();
 loadArcadeDesigns();
