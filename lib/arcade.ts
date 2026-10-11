@@ -118,10 +118,13 @@ export function createPattern(input: {
   prompt: string;
   referenceIds?: string[];
   colors?: string[];
+  // A jewelry category makes the design and its product in one job (no references or colors).
+  categoryId?: string;
 }) {
   return call<ArcadeJob>("patterns/create", {
     requestId: input.requestId,
     prompt: input.prompt,
+    ...(input.categoryId ? { categoryId: input.categoryId } : {}),
     ...(input.referenceIds?.length ? { referenceIds: input.referenceIds } : {}),
     ...(input.colors?.length ? { colors: input.colors } : {}),
   });
@@ -155,5 +158,11 @@ export function createProduct(input: {
 }
 
 export function createCheckout(requestId: string, lines: { productId: string; quantity: number }[]) {
-  return call<{ checkoutId: string; checkoutUrl: string }>("checkouts/create", { requestId, lines });
+  // Without a subscription, Arcade only ships single pieces with its drop-ship service (412 otherwise).
+  const dropShip = lines.some((line) => line.quantity === 1);
+  return call<{ checkoutId: string; checkoutUrl: string }>("checkouts/create", {
+    requestId,
+    lines,
+    ...(dropShip ? { dropShip: true } : {}),
+  });
 }

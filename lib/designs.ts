@@ -32,6 +32,20 @@ export function buildPrompt(input: {
   ].filter(Boolean).join(" ").slice(0, 1000);
 }
 
+/**
+ * Arcade jewelry takes a text prompt only (no images or models), so the pet's 3D twin
+ * is described in words and the piece is sculpted from that description.
+ */
+export function buildJewelryPrompt(input: { petName: string; categoryName: string; shape: string }) {
+  const piece = input.categoryName.toLowerCase();
+  return [
+    `${input.categoryName} shaped like a tiny sculpted 3D figure of a pet named ${input.petName}:`,
+    `${input.shape}.`,
+    `The whole silhouette is the ${piece}, solid metal, with the fur and features as fine engraved texture, cute and clearly recognisable.`,
+    "14k gold vermeil. No gemstones, no text.",
+  ].join(" ").slice(0, 1000);
+}
+
 export function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message.slice(0, 500) : fallback;
 }

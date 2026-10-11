@@ -759,6 +759,15 @@ const DEMO_PHOTO_URL = "assets/whispurr-demo.jpg";
 // Made earlier by Meshy image-to-3D from the demo photo, then simplified for the web.
 const DEMO_TWIN_URL = "assets/whispurr-twin-storybook-v2.glb";
 const DEMO_PET_ID = "whispurr";
+// Arcade jewelry is made from words only, so this is the demo twin's 3D shape described for it.
+const DEMO_TWIN_SHAPE =
+  "a fluffy long-haired Persian cat standing on all four paws in three-quarter view, round face with big round eyes and small ears, a thick ruff around the neck, a slim collar, and a big plumed tail curving up behind";
+/** The pet's 3D twin in words, for jewelry sculpted from its shape. */
+function twinShape(pet) {
+  if (pet.twinJob?.demo) return DEMO_TWIN_SHAPE;
+  const kind = pet.type && pet.type !== "Other" ? pet.type.toLowerCase() : "pet";
+  return `a ${kind} standing on all four paws, full body, seen in three-quarter view`;
+}
 const demoTwinJob = () => ({ id: "demo", status: "ready", progress: 100, modelUrl: DEMO_TWIN_URL, demo: true });
 /** The demo pet opens with its photo and the storybook 3D twin already in place. */
 function attachDemoTwin(pet) {
@@ -1053,6 +1062,7 @@ function showArcadeDesign(design) {
     setArcadeStatus(escapeHtml(design.error || "Arcade could not finish this design."), "error");
   renderSavedDesigns();
 }
+const DEMO_DESIGN_NAME = "Design 1";
 async function loadArcadeDesigns() {
   const pet = activePet();
   try {
@@ -1060,7 +1070,11 @@ async function loadArcadeDesigns() {
     arcade.signedIn = true;
     arcade.configured = configured;
     pet.arcadeDesigns = designs;
-    if (pet === activePet()) renderSavedDesigns();
+    // Demo: the studio, shop and cubby start on Design 1 unless something is already chosen.
+    const demoDesign = designs.find((d) => d.name === DEMO_DESIGN_NAME && d.status === "succeeded");
+    if (pet === activePet() && !state.shopDesignId && demoDesign) state.shopDesignId = demoDesign.id;
+    if (pet === activePet() && !state.activeDesignId && demoDesign && state.designMode === "pattern") showArcadeDesign(demoDesign);
+    else if (pet === activePet()) renderSavedDesigns();
     designs.filter((d) => d.status === "running").forEach((d) => pollArcadeDesign(pet, d.id));
   } catch (error) {
     if (error.status === 401) arcade.signedIn = false;
@@ -1199,7 +1213,10 @@ async function makeArcadeProduct(designId, categoryId) {
   const name = arcade.catalog?.find((c) => c.categoryId === categoryId)?.name || "piece";
   toast(`Arcade is setting up the ${name.toLowerCase()}. This can take a minute.`);
   try {
-    const { product } = await api("/api/arcade-products", { method: "POST", body: { designId, categoryId } });
+    const { product } = await api("/api/arcade-products", {
+      method: "POST",
+      body: { designId, categoryId, shape: twinShape(activePet()) },
+    });
     const list = (arcade.products[designId] || []).filter((p) => p.categoryId !== categoryId);
     arcade.products[designId] = [product, ...list];
     if (product.status === "running") pollArcadeProduct(designId, product.id);
@@ -1215,7 +1232,8 @@ async function pollArcadeProduct(designId, productId) {
   polling.add(productId);
   const started = Date.now();
   try {
-    while (Date.now() - started < 6 * 60 * 1000) {
+    // Jewelry is designed, then priced by a maker, so it can take several minutes.
+    while (Date.now() - started < 12 * 60 * 1000) {
       await sleep(4000);
       let product;
       try {

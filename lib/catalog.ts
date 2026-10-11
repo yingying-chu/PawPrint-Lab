@@ -2,10 +2,12 @@ import { listCategories } from "@/lib/arcade";
 
 export type UseCase = "sleep" | "dine" | "out" | "home" | "keepsake";
 
-// Arcade print categories that suit a pet-and-owner shop, matched by name because
+// Arcade categories that suit a pet-and-owner shop, matched by name because
 // category ids must come from categories/list rather than being hard-coded.
-// `useCase` places each one on a shelf in the Cubby.
-const CURATED: { name: string; audience: "pet" | "owner"; useCase: UseCase; note: string }[] = [
+// `useCase` places each one on a shelf in the Cubby. Print pieces carry the design's
+// pattern; jewelry is sculpted from a description of the pet's 3D twin instead.
+type CuratedItem = { name: string; world?: "print" | "jewelry"; audience: "pet" | "owner"; useCase: UseCase; note: string };
+const CURATED: CuratedItem[] = [
   { name: "Floor Pillows", audience: "pet", useCase: "sleep", note: "A floor cushion they can claim as their bed" },
   { name: "Quilts", audience: "pet", useCase: "sleep", note: "For the sofa corner they nap in" },
   { name: "Duvets", audience: "owner", useCase: "sleep", note: "The bed they sleep on anyway" },
@@ -18,11 +20,14 @@ const CURATED: { name: string; audience: "pet" | "owner"; useCase: UseCase; note
   { name: "Curtains", audience: "owner", useCase: "home", note: "For the window they guard" },
   { name: "Drum Lampshades", audience: "owner", useCase: "home", note: "A warm glow in their pattern" },
   { name: "Pocket Squares", audience: "owner", useCase: "keepsake", note: "A small nod, worn on you" },
+  { name: "Stud Earrings", world: "jewelry", audience: "owner", useCase: "keepsake", note: "Their 3D twin, cast small enough to wear" },
+  { name: "Pendant Necklace", world: "jewelry", audience: "owner", useCase: "keepsake", note: "Their 3D twin as a charm, worn close" },
 ];
 
 export type CatalogItem = {
   categoryId: string | null;
   name: string;
+  world: "print" | "jewelry";
   imageUrl: string | null;
   audience: "pet" | "owner";
   useCase: UseCase;
@@ -31,15 +36,16 @@ export type CatalogItem = {
 
 /** The curated list without Arcade data, for showing shelves before Arcade is connected. */
 export function curatedCatalog(): CatalogItem[] {
-  return CURATED.map((item) => ({ ...item, categoryId: null, imageUrl: null }));
+  return CURATED.map((item) => ({ ...item, world: item.world ?? "print", categoryId: null, imageUrl: null }));
 }
 
 export async function getCatalog(): Promise<(CatalogItem & { categoryId: string })[]> {
   const categories = await listCategories();
   return CURATED.flatMap((item) => {
-    const category = categories.find((c) => c.world === "print" && c.name === item.name);
+    const world = item.world ?? "print";
+    const category = categories.find((c) => c.world === world && c.name === item.name);
     return category
-      ? [{ ...item, categoryId: category.categoryId, name: category.name, imageUrl: category.imageUrl }]
+      ? [{ ...item, world, categoryId: category.categoryId, name: category.name, imageUrl: category.imageUrl }]
       : [];
   });
 }

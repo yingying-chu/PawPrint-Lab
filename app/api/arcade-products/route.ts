@@ -2,9 +2,9 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { arcadeProducts, designs } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
-import { arcadeConfigured, createProduct, getCategoryDefaults } from "@/lib/arcade";
+import { arcadeConfigured, createPattern, createProduct, getCategoryDefaults } from "@/lib/arcade";
 import { getCatalog } from "@/lib/catalog";
-import { arcadeErrorResponse, refreshProduct, serializeProduct } from "@/lib/designs";
+import { arcadeErrorResponse, buildJewelryPrompt, refreshProduct, serializeProduct } from "@/lib/designs";
 
 export const runtime = "edge";
 
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
   if (!arcadeConfigured()) {
     return Response.json({ error: "Arcade is not connected yet.", code: "ARCADE_NOT_CONFIGURED" }, { status: 503 });
   }
-  const body = await request.json().catch(() => ({})) as { designId?: string; categoryId?: string };
+  // `shape` describes the pet's 3D twin in words, for jewelry.
+  const body = await request.json().catch(() => ({})) as { designId?: string; categoryId?: string; shape?: string };
   const db = getDb();
   const [design] = await db.select().from(designs)
     .where(and(eq(designs.id, String(body.designId ?? "")), eq(designs.userId, user.userId)))
@@ -51,17 +52,28 @@ export async function POST(request: Request) {
       return Response.json({ product: await serializeProduct(await refreshProduct(existing)) });
     }
 
-    const defaults = await getCategoryDefaults(category.categoryId);
-    if (!defaults.canManufacture) {
-      return Response.json({ error: `${category.name} can't be made right now.` }, { status: 422 });
-    }
     const id = crypto.randomUUID();
-    const job = await createProduct({
-      requestId: `product-${id}`,
-      patternId: design.patternId,
-      categoryId: category.categoryId,
-      selections: defaults.selections,
-    });
+    let job;
+    if (category.world === "jewelry") {
+      // products/create refuses jewelry: one patterns/create job designs the piece and builds its product.
+      const shape = String(body.shape ?? "").trim().slice(0, 400) || "a pet standing, full body, seen in three-quarter view";
+      job = await createPattern({
+        requestId: `jewelry-${id}`,
+        prompt: buildJewelryPrompt({ petName: design.petName, categoryName: category.name, shape }),
+        categoryId: category.categoryId,
+      });
+    } else {
+      const defaults = await getCategoryDefaults(category.categoryId);
+      if (!defaults.canManufacture) {
+        return Response.json({ error: `${category.name} can't be made right now.` }, { status: 422 });
+      }
+      job = await createProduct({
+        requestId: `product-${id}`,
+        patternId: design.patternId,
+        categoryId: category.categoryId,
+        selections: defaults.selections,
+      });
+    }
     const now = new Date().toISOString();
     const row = {
       id,
