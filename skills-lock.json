@@ -14,6 +14,12 @@
       "sourceType": "well-known",
       "computedHash": "87ec7c64078b6c9f3afa91f9bd35052a1d170d7410e577ac810670472025985c",
       "wellKnownDigest": "sha256:538a90edb0d8544211ddb8fc89758522d6d07a7dfc693f8a47a5e1174e4afd9a"
+    },
+    "turso-cloud": {
+      "source": "tursodatabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/turso-cloud/SKILL.md",
+      "computedHash": "6bdc1ca45154caeb33e42ad232f760db7f5483f2a29f41339cbb3e998b519d5b"
     }
   }
 }

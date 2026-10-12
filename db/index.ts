@@ -1,13 +1,24 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { createClient } from "@libsql/client";
+import { mkdirSync } from "node:fs";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
+const LOCAL_DATABASE_URL = "file:.data/pawprint.db";
 
-  return drizzle(env.DB, { schema });
+/** Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) when deployed; a local SQLite file in dev. */
+export function databaseConfig() {
+  const url = process.env.TURSO_DATABASE_URL;
+  if (url) return { url, authToken: process.env.TURSO_AUTH_TOKEN };
+  if (process.env.VERCEL) {
+    throw new Error("TURSO_DATABASE_URL is not set. Connect a Turso database to this Vercel project.");
+  }
+  mkdirSync(".data", { recursive: true });
+  return { url: LOCAL_DATABASE_URL };
+}
+
+let db: ReturnType<typeof drizzle<typeof schema>> | undefined;
+
+export function getDb() {
+  db ??= drizzle(createClient(databaseConfig()), { schema });
+  return db;
 }

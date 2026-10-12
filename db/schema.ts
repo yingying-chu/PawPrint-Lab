@@ -71,7 +71,7 @@ export const arcadeProducts = sqliteTable("arcade_products", {
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [index("arcade_products_design_idx").on(table.userId, table.designId)]);
 
-// Generated 2D artwork (character stickers) for a pet, stored privately in R2.
+// Generated 2D artwork (character stickers) for a pet, stored privately (lib/storage.ts).
 export const petAssets = sqliteTable("pet_assets", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),

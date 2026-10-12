@@ -6,8 +6,6 @@ import { arcadeConfigured, createPattern, createProduct, getCategoryDefaults } f
 import { getCatalog } from "@/lib/catalog";
 import { arcadeErrorResponse, buildJewelryPrompt, refreshProduct, serializeProduct } from "@/lib/designs";
 
-export const runtime = "edge";
-
 export async function GET(request: Request) {
   const user = await getApiUser();
   if (!user) return unauthorized();

@@ -5,8 +5,6 @@ import { getApiUser, unauthorized } from "@/lib/api-auth";
 import { arcadeConfigured, createCheckout } from "@/lib/arcade";
 import { arcadeErrorResponse } from "@/lib/designs";
 
-export const runtime = "edge";
-
 // Creates an unpaid Arcade checkout. Payment happens on Arcade's page, never here.
 export async function POST(request: Request) {
   const user = await getApiUser();

@@ -620,6 +620,12 @@ h3 {
   border: 2.5px solid var(--ink);
   box-shadow: 10px 10px 0 var(--sun);
 }
+.hero-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .hero-tiles {
   display: flex;
   gap: 8px;

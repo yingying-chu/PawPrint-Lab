@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { getDb } from "@/db";
 import { pets, petPhotos } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
@@ -10,8 +10,8 @@ import {
   retentionDays,
 } from "@/lib/photo-storage";
 
-export const runtime = "edge";
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+// Vercel rejects request bodies over 4.5 MB; the browser shrinks larger photos first (public/app.js).
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 export async function POST(request: Request) {
   const user = await getApiUser();
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Pet name and profile are required." }, { status: 400 });
   }
   if (file.size > MAX_FILE_SIZE) {
-    return Response.json({ error: "Images must be 10 MB or smaller." }, { status: 413 });
+    return Response.json({ error: "Images must be 4 MB or smaller." }, { status: 413 });
   }
 
   await cleanupExpiredPhotos(user.userId);

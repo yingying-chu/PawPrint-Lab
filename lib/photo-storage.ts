@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, eq, lte } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petPhotos } from "@/db/schema";
@@ -17,7 +17,7 @@ export function deletionDate(from = new Date()) {
 }
 
 export async function cleanupExpiredPhotos(userId?: string) {
-  if (!env.BUCKET) throw new Error("R2 binding `BUCKET` is unavailable.");
+  if (!env.BUCKET) throw new Error("File storage is unavailable.");
   const db = getDb();
   const cutoff = new Date().toISOString();
   const where = userId

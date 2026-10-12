@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "node scripts/migrate.mjs && next build",
+  "crons": [{ "path": "/api/maintenance/cleanup", "schedule": "0 9 * * *" }]
+}

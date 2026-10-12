@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { designs, petAssets, petPhotos } from "@/db/schema";
@@ -17,8 +17,6 @@ import {
   refreshDesign,
   serializeDesign,
 } from "@/lib/designs";
-
-export const runtime = "edge";
 
 const notConfigured = () => Response.json(
   { error: "Arcade is not connected yet.", code: "ARCADE_NOT_CONFIGURED" },

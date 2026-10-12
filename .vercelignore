@@ -1,0 +1,7 @@
+.data
+.env
+.env.*
+.next
+.arcade-api
+*.tsbuildinfo
+.claude

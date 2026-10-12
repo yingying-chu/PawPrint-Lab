@@ -2,8 +2,6 @@ import { arcadeConfigured } from "@/lib/arcade";
 import { curatedCatalog, getCatalog } from "@/lib/catalog";
 import { arcadeErrorResponse } from "@/lib/designs";
 
-export const runtime = "edge";
-
 // Public: the catalog holds product names and Arcade's category thumbnails, no user data.
 export async function GET() {
   if (!arcadeConfigured()) return Response.json({ configured: false, items: curatedCatalog() });

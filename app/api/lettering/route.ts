@@ -1,12 +1,10 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petAssets } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
 import { serializeCharacter } from "@/lib/characters";
 import { privateAssetKey, recordPetId } from "@/lib/photo-storage";
-
-export const runtime = "edge";
 
 const MAX_PNG_BYTES = 4 * 1024 * 1024;
 const STITCH_LABELS: Record<string, string> = { running: "running stitch", chain: "chain stitch" };

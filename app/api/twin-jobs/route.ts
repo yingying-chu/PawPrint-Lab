@@ -6,8 +6,6 @@ import { meshyConfigured } from "@/lib/meshy";
 import { cleanupExpiredPhotos, recordPetId } from "@/lib/photo-storage";
 import { refreshTwinJob, serializeTwinJob, submitTwinJob } from "@/lib/twins";
 
-export const runtime = "edge";
-
 /** Latest twin job for a pet profile, advanced by one poll. */
 export async function GET(request: Request) {
   const user = await getApiUser();

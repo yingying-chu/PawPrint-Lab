@@ -4,8 +4,6 @@ import { petAssets } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
 import { refreshCharacter, serializeCharacter } from "@/lib/characters";
 
-export const runtime = "edge";
-
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getApiUser();
   if (!user) return unauthorized();

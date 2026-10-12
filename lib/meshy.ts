@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 
 // Server-only client for the Meshy API (https://docs.meshy.ai). Never import from browser code.
 const API_BASE = "https://api.meshy.ai/openapi/v1";
@@ -114,26 +114,13 @@ export async function downloadAsset(url: string) {
   };
 }
 
-/**
- * Streams a Meshy asset into R2 without holding it in memory; 3D models can be
- * larger than a Worker's memory limit.
- */
+/** Streams a Meshy asset into storage without holding it in memory; 3D models can be large. */
 export async function copyAssetToBucket(url: string, key: string, contentType: string) {
   const response = await fetch(url);
   if (!response.ok || !response.body) {
     throw new MeshyError(`Could not download the Meshy result (${response.status})`, response.status);
   }
-  const length = Number(response.headers.get("content-length"));
-  if (!(length > 0)) {
-    await env.BUCKET!.put(key, await response.arrayBuffer(), { httpMetadata: { contentType } });
-    return;
-  }
-  // R2 only accepts a stream of known length; FixedLengthStream supplies it.
-  const { readable, writable } = new FixedLengthStream(length);
-  await Promise.all([
-    response.body.pipeTo(writable),
-    env.BUCKET!.put(key, readable, { httpMetadata: { contentType } }),
-  ]);
+  await env.BUCKET!.put(key, response.body, { httpMetadata: { contentType } });
 }
 
 export function arrayBufferToDataUrl(buffer: ArrayBuffer, contentType: string) {

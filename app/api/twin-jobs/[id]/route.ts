@@ -4,8 +4,6 @@ import { twinJobs } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
 import { refreshTwinJob, serializeTwinJob } from "@/lib/twins";
 
-export const runtime = "edge";
-
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getApiUser();
   if (!user) return unauthorized();

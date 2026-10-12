@@ -1,10 +1,8 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petPhotos } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
-
-export const runtime = "edge";
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getApiUser();

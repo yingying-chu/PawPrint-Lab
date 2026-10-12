@@ -1,12 +1,10 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { twinJobs } from "@/db/schema";
 import { getApiUser, unauthorized } from "@/lib/api-auth";
 
-export const runtime = "edge";
-
-/** Streams the owner's private GLB from R2. */
+/** Streams the owner's private GLB from storage. */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getApiUser();
   if (!user) return unauthorized();

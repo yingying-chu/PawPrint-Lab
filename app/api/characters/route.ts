@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { petAssets, petPhotos } from "@/db/schema";
@@ -12,8 +12,6 @@ import {
   serializeCharacter,
 } from "@/lib/characters";
 import { MeshyError, arrayBufferToDataUrl, createImageTask, meshyConfigured } from "@/lib/meshy";
-
-export const runtime = "edge";
 
 export async function GET(request: Request) {
   const user = await getApiUser();

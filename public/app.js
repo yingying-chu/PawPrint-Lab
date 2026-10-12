@@ -295,7 +295,6 @@ function renderRoute() {
   }
   if (route === "designs") updateReferenceOption();
   if (route === "home") renderCubby();
-  if (route === "landing") requestAnimationFrame(fitHeroStage);
   closeBag();
   closeCustomizer();
   if (changed || route === "product") window.scrollTo({ top: 0, behavior: "auto" });
@@ -343,12 +342,6 @@ function renderHome() {
     .map((slug) => productCard(productBySlug(slug), { featured: true }))
     .join("");
 }
-// The hero scene is drawn on a 560px stage; scale it to the frame.
-function fitHeroStage() {
-  const frame = $("#heroFrame");
-  if (frame.clientWidth) frame.style.setProperty("--stage-scale", frame.clientWidth / 560);
-}
-new ResizeObserver(fitHeroStage).observe($("#heroFrame"));
 // Add to bag / customize buttons anywhere in the page.
 document.addEventListener("click", (e) => {
   const add = e.target.closest("[data-add]");
@@ -692,10 +685,32 @@ const setStorageStatus = (message, tone = "") => {
   el.className = `storage-status ${tone}`.trim();
   el.innerHTML = message;
 };
+// Uploads must stay under 4 MB (Vercel's request limit), so big phone photos are re-encoded as JPEG.
+const UPLOAD_LIMIT = 4 * 1024 * 1024;
+async function shrinkPhoto(file) {
+  if (file.size <= UPLOAD_LIMIT) return file;
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    return file; // A format this browser can't decode; the server will say it's too large.
+  }
+  const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  for (const quality of [0.88, 0.78, 0.65]) {
+    const blob = await new Promise((done) => canvas.toBlob(done, "image/jpeg", quality));
+    if (blob && blob.size <= UPLOAD_LIMIT) return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  }
+  return file;
+}
 async function savePrivatePhoto(file, photo, pet) {
   setStorageStatus(`Saving ${escapeHtml(file.name)} privately…`, "saving");
   const form = new FormData();
-  form.append("file", file);
+  form.append("file", await shrinkPhoto(file));
   form.append("petId", pet.id);
   form.append("petName", petName(pet));
   form.append("petType", pet.type);

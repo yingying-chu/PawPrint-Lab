@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { env } from "@/lib/env";
 
 // Server-only client for the Arcade public API (https://docs.arcade.ai).
 // Every procedure is a POST with a JSON body. Never import this from browser code.
